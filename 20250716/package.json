@@ -1,0 +1,15 @@
+{
+  "name": "20250716",
+  "version": "1.0.0",
+  "description": "> 이더리움의 계정 EOA CA\r > EOA : externally owned account\r > CA : contract address, smart account",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^6.15.0"
+  }
+}
