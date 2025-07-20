@@ -6,7 +6,9 @@ const pinata_api_key = "84341dedc5714b228c1f";
 const pinata_secret_api_key = "3a0293c0918269143c81ab9c4ef791d4f83b0d7f925ddb8aafd43e4c1e3e819d"
 
 
-
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const uploadIPFS = async (formdata, paymaster, contractMetaNft, contractNFT, signer) => {
     const ContractMetaNFT = contractMetaNft.connect(paymaster)
@@ -97,65 +99,79 @@ const GetBTKcoin = async (signer, paymaster, contractMeta, contractCoin) => {
 
 const userBalance = async (signer, contractCoin) => {
     if (!contractCoin || !signer) return;
-    const balance = await contractCoin.balanceOf(signer.address)
-    // delay(1000)
-    // console.log(balance, 'asd')
-    return balance
+    try {
+        const balance = await contractCoin?.balanceOf(signer.address)
+        return balance
+    } catch (error) {
+        console.log(error, 'userbalance')
+    }
 }
-// const getOwnerNft
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 
 const SellNft = async (contractNFT, contractMetaNft, signer, paymaster, nftid, token, price) => {
-    if(!paymaster) return;
+    if (!paymaster) return;
     const addrs = await contractMetaNft.getAddress()
-    console.log('items',addrs , signer.address, paymaster, nftid, token, price)
-
+    // console.log('items', addrs, signer.address, paymaster, nftid, token, price)
     const reCharge = await paymaster.sendTransaction({
-        to : signer.address,
-        value : ethers.parseEther("0.0015")
+        to: signer.address,
+        value: ethers.parseEther("0.0015")
     })
     await reCharge.wait()
-
     await contractNFT.connect(signer).setApprovalForAll(paymaster.getAddress(), true);
-
-    // 2. Paymaster calls SellNFT on meta contract
     const metaNftWithPaymaster = contractMetaNft.connect(paymaster);
     const tx = await metaNftWithPaymaster.SellNFT(signer.getAddress(), nftid, token, price);
     await tx.wait();
-    console.log(tx)
-    // return data
-
-    const sellData = await contractMetaNft.getall(nftid)
-    console.log(sellData)
-    return sellData 
+    const sellData = await contractMetaNft.getall(signer.address, nftid)
+    const decodedSellData = []
+    decodedSellData.push({
+        seller: sellData[0],
+        token: sellData[1].toString(),
+        price: sellData[2].toString()
+    })
+    return decodedSellData
 }
 
 
 const userNft = async (userAddress, contractNFT) => {
     if (!contractNFT) return
-    console.log(contractNFT, "contractnft")
-    const userNftids = await contractNFT.userTokens(userAddress)
-    console.log(userNftids, 'ids')
-    const ObjectNfts = [];
-    for (const id of userNftids) {
-        const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
-        const Nfturi = await contractNFT.uri(id);
-        const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
-        ObjectNfts.push({ tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data });
+    try {
+        const userNftids = await contractNFT.userTokens(userAddress)
+        const ObjectNfts = [];
+        for (const id of userNftids) {
+            const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
+            const Nfturi = await contractNFT.uri(id);
+            const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
+            ObjectNfts.push({ tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data });
+        }
+        return ObjectNfts;
+    } catch (error) {
+        console.log('usernft', error)
     }
-    // const ObjectNfts = await Promise.all(
-    //     userNftids.map(async (id) => {
-    //       const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
-    //       const Nfturi = await contractNFT.uri(id);
-    //       const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
-    //       return { tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data };
-    //     })
-    //   );
-    console.log(ObjectNfts, 'ss')
-    return ObjectNfts;
+}
+
+const getAllListedNftids = async (contractNft) => {
+    if (!contractNft) return;
+    try {
+        await delay(1000)
+        const data = await contractNft.getAllListedNFTIds()
+        await delay(1000)
+        const newData = await Promise.all(data?.map((el) => ({
+            address: el[0],
+            nftId: el[1]
+        })))
+        console.log(newData, "selldata")
+        return newData
+
+    } catch (error) {
+        return error
+    }
 }
 
 
-export { uploadIPFS, GetBTKcoin, userBalance, userNft, SellNft } 
+const BuyNft = async (sender, receiver, nftid, price, contractMetaNft, paymaster) => {
+    const paymasterContract = contractMetaNft.connect(paymaster)
+    await paymasterContract.BuyNFT(sender, receiver, nftid, price)
+
+}
+
+export { BuyNft, uploadIPFS, GetBTKcoin, userBalance, userNft, SellNft, getAllListedNftids } 

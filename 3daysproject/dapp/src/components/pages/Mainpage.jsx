@@ -5,14 +5,16 @@ import { createWallet, getWallet, getWallets } from '../../api/Wallet';
 import { getUser, getUsers, Patchbalance } from '../../api/Model';
 import { useEthers } from '../../hooks/useEthers';
 import { useDispatch, useSelector } from "react-redux"
-import { uploadIPFS, GetBTKcoin, userBalance, userNft } from '../../api/Contract';
+import { uploadIPFS, GetBTKcoin, userBalance, userNft, getAllListedNftids, BuyNft } from '../../api/Contract';
 import Mypage from './Mypage';
+import axios from 'axios';
 
 const Mainpage = () => {
     const [userkeys, setUserkeys] = useState([])
     const [users, setUsers] = useState(null);
     const [userbalance, setUserbalance] = useState(0);
-    const [nfts, setNfts] = useState([])
+    const [nfts, setNfts] = useState([]);
+    const [sellData, setSellData] = useState([]);
     const islogin = useSelector((state) => state.LoginReducer.State)
     const userId = useSelector((state) => state.LoginReducer.userId)  // ✅ Get from Redux
     const user = useSelector((state) => state.LoginReducer.user)      // ✅ Get from Redux
@@ -64,16 +66,60 @@ const Mainpage = () => {
 
     const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } =
         useEthers(...ethersArgs);
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    useEffect(() => {
+        if (!contractNFT) return;
+
+        const fetchSellData = async () => {
+            try {
+                const data = await getAllListedNftids(contractNFT);
+                // Wait for all sellLists to resolve
+                await delay(1000)
+                console.log(data, 'data')
+                if (!data) return;
+                const result = await Promise.all(data.map(async (el, i) => {
+                    await delay(1000)
+                    const sellLists = await contractMetaNft.getall(el.address, el.nftId);
+                    // console.log(sellLists, 'kk11')
+                    await delay(1000)
+                    const imgUri = await contractNFT?.uri(el.nftId)
+                    const { data } = await axios.get(`http://gateway.pinata.cloud/ipfs/${imgUri}`)
+                    // console.log(data, 'uri')
+                    if (!sellLists || !data) return undefined;
+                    return ({
+                        address: sellLists[0],
+                        nftid: el.nftId,
+                        nftToken: sellLists[1],
+                        price: sellLists[2],
+                        uridata: data
+                    })
+                }));
+                const uniqueSellData = [];
+                const seen = new Set();
+
+                for (const el of result) {
+                    const key = `${el.address.toLowerCase()}-${el.nftid.toString()}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueSellData.push(el);
+                    }
+                }
+                setSellData(uniqueSellData); // flatten if you want a single array
+                console.log(uniqueSellData, 'uniqueSellData');
+
+            } catch (error) {
+                // alert('fetchsell' + error)
+                console.log('error')
+            }
+        }
+
+        fetchSellData();
+    }, [contractNFT]);
 
 
-
-    // const createwalletMutn = useMutation({
-    //     mutationFn: createWallet,
-    //     onSuccess: () => {
-    //         // refetch()
-    //         queryClient.invalidateQueries(['users'])
-    //     }
-    // })
     const createNftMutn = useMutation({
         mutationFn: async (e) => {
             e.preventDefault();
@@ -84,8 +130,8 @@ const Mainpage = () => {
             formdata.append("file", File)
             console.log('test uploadipfs data', formdata, signer)
             const data = await uploadIPFS(formdata, paymaster, contractMetaNft, contractNFT, signer)
-            const NftDatas = await userNft(signer.address, contractNFT)
-            setNfts(NftDatas)
+            // const NftDatas = await userNft(signer.address, contractNFT)
+            // setNfts(NftDatas)
 
         },
         onSuccess: () => {
@@ -118,7 +164,6 @@ const Mainpage = () => {
         // navigate('/')
         dispatch({ type: 'logout' })  // This will clear userId and user too
         console.log('zz')
-
     }
 
     const getBTKcoin = async () => {
@@ -131,6 +176,7 @@ const Mainpage = () => {
         const newdata = Number(data)
         const result = await Patchbalance(user.data.id, newdata)
         setUserbalance(newdata)
+        navigate('/main')
     }
 
     const imgpath = (img) => {
@@ -139,10 +185,27 @@ const Mainpage = () => {
         return httpUrl
     }
 
+    const BuyNfthandler = async (sender, nftid, price) => {
+        const paymasterNft = contractMetaNft.connect(paymaster);
+        const paymasterCoin = contractMeta.connect(paymaster);
+        await paymasterNft.BuyNFT(sender, signer.address, nftid, price);
+        const msg = 'hello'
+        const signature = signer.signMessage(msg)
+        // await paymasterCoin.Send(signer.address, sender, price, msg, signature)
+        console.log('SS')
+        navigate('/main')
+    }
+
+    const CancelsellHandler = async (sender, nftid) => {
+        const paymasterContract = contractMetaNft.connect(paymaster);
+        await paymasterContract.cancelSale(sender, nftid);
+        navigate('/main')
+    }
+
     useEffect(() => {
         // ✅ Fetch user data when userId changes
         if (userId && !user) {
-            const fetchUserData = async () => {
+            (async () => {
                 try {
                     const Userinfo = await getUser(userId)
                     await delay(1000);
@@ -150,57 +213,36 @@ const Mainpage = () => {
                 } catch (error) {
                     console.error('Error fetching user data:', error)
                 }
-            }
-            fetchUserData()
+            })()
         }
-    }, [userId, user, dispatch])
+    }, [userId, user])
 
     useEffect(() => {
         // if(loading) return;
         // console.log(users, 'users data')
         // console.log(userId, 'userId data')
-        console.log(user, 'user data')
+        // console.log(user, 'user data')
         // console.log(data, 'query data')
         // console.log(userkeys, 'userkeys data')
         // console.log(islogin, 'islogin data')
         // console.log(signer, 'signer data')
-        console.log(nfts, 'nfts data',)
-        console.log(pkprovider, provider, paymaster, contractNFT, contractMeta, 'providers data')
-        dispatch({ type: "Contracts", payload: { signer, paymaster, contractMeta, contractNFT, contractCoin, contractMetaNft } })
+        // console.log(nfts, 'nfts data',)
+        // console.log(pkprovider, provider, paymaster, contractNFT, contractMeta, 'providers data')
+
 
     }, [contractMetaNft])
 
-    useMemo(() => {
+    useEffect(() => {
         if (!contractNFT || !user || !signer) return;
-        // console.log(contractNFT, 'csjfjd')
         (async () => {
-            console.log(contractNFT, '1111', signer)
-
             const result = await userBalance(signer, contractCoin)
             const newResult = Number(result);
             setUserbalance(newResult);
-            const NftDatas = await userNft(signer.address, contractNFT)
-            setNfts(NftDatas)
-            console.log(NftDatas, 'nftdatas')
             console.log(newResult, userbalance, signer, "signer", nfts)
-          
-
         })()
-    }, [contractMetaNft,])
+        dispatch({ type: "Contracts", payload: { signer, paymaster, contractMeta, contractNFT, contractCoin, contractMetaNft } })
+    }, [contractMetaNft])
 
-    useEffect(() => {
-
-        console.log(nfts, 'nfts')
-        dispatch({ type: "nftDatas", payload: nfts })
-    }, [nfts])
-
-    // useEffect(() => {
-    //     if(!contractMetaNft) return
-    //     (async () => {
-    //         const sellData = await contractMetaNft.getall(1)
-    //         console.log(sellData, 'sellData')
-    //     })()
-    // },[contractMetaNft])
 
     if (isLoading) return <>...loading</>
     if (!islogin) return <>로그인해주세요</>
@@ -225,9 +267,9 @@ const Mainpage = () => {
 
                 <h3>User 정보</h3>
                 {user ? <ul>
-                    <li>user 계정 : {signer?.address} </li>
-                    <li>user 공개키 : {user.data.publicKey}</li>
-                    <li>user 잔액 : {userbalance}</li>
+                    <li>계정 : {signer?.address} </li>
+                    <li>공개키 : {user.data.publicKey}</li>
+                    <li>잔액 : {userbalance} BTK</li>
                 </ul> : ""}
                 <h3>Get Bing Token</h3>
                 <button onClick={getBTKcoin} >Getcoin</button>
@@ -237,10 +279,22 @@ const Mainpage = () => {
                     <button>submit</button>
                 </form>
                 <h3>NFTs:</h3>
-                {/* {nfts?.map((el, i) =>
-                    (<img key={i} src={imgpath(el.uridata.image)} width="200px" />)
-                )} */}
-                <img src="http://gateway.pinata.cloud/ipfs/QmeuPaDUPkWsYfSMb2yUztWNhFUTTvPaqns3H9UW4fcGGY" />
+                {sellData?.map((el, i) =>
+                (Number(el.nftToken) !== 0 ? <div key={i}>
+                    <img src={imgpath(el.uridata.image)} width="200px" />
+                    <div><span>Total available Nft : 100</span></div>
+                    <div><span>id : {el.nftid}</span> <span>sell amt : {el.nftToken}</span></div>
+                    <div><span>name : {el.uridata.name}</span></div>
+                    <div>price : {el.price}</div>
+                    {el.address !== signer.address ?
+                        <button onClick={() => {
+                            BuyNfthandler(el.address, el.nftid, el.price)
+                        }}>Buy Nft</button> : <button onClick={() => {
+                            CancelsellHandler(signer.address, el.nftid)
+                        }}>Cancel sell</button>}
+                </div> : null)
+                )}
+                {/* <img src="http://gateway.pinata.cloud/ipfs/QmeuPaDUPkWsYfSMb2yUztWNhFUTTvPaqns3H9UW4fcGGY" /> */}
                 <h3>Users:</h3>
                 {users && users.length > 0 ? (
                     <ul>1

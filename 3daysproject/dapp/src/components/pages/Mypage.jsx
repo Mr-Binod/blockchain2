@@ -1,9 +1,9 @@
 import { id } from 'ethers'
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Link, useNavigate } from 'react-router-dom'
 import { styled } from "styled-components"
-import { SellNft } from '../../api/Contract'
+import { SellNft, userNft } from '../../api/Contract'
 
 
 const Wrap = styled.div`
@@ -66,26 +66,45 @@ const Mypage = () => {
   const [userbalance, setUserbalance] = useState(null)
   const [tknid, setTknid] = useState("")
   const [idindx, setIndx] = useState("")
+  const [nfts, setNfts] = useState([])
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { signer, contractMeta, contractNFT, paymaster, contractCoin, contractMetaNft } = useSelector(state => state.walletReducer)
 
-  const [nfts] = useSelector((state) => state.NftsReducer)
+  // const [nfts] = useSelector((state) => state.NftsReducer)
   const user = useSelector((state) => state.LoginReducer.user)
-  console.log(nfts, 'GG', user)
 
   const imgpath = (img) => {
     const httpUrl = img.replace("ipfs://", "http://gateway.pinata.cloud/ipfs/");
     console.log(httpUrl, 'url11')
     return httpUrl
   }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
   useEffect(() => {
     console.log(userbalance, 'userbalance')
     console.log(signer)
   }, [])
 
-  useEffect(() => {
-    // const data = userBalance(signer.address, contractCoin)
-    // setUserbalance(data)
-  }, [])
+   useEffect(() => {
+        console.log(nfts, 'nfts')
+        dispatch({ type: "nftDatas", payload: nfts })
+    }, [nfts])
+
+    useEffect(() => {
+      async function fetchNfts() {
+        if (!signer || !contractNFT) return;
+        await delay(1000)
+        const NftDatas = await userNft(signer.address, contractNFT);
+        setNfts(NftDatas);
+      }
+      fetchNfts();
+      // No return value!
+    }, [contractNFT]);
+  
   const sellNft = async (e) => {
     // alert(Number(nfts[i].balance))
     e.preventDefault();
@@ -101,11 +120,24 @@ const Mypage = () => {
       console.log(newtknvalue, 'newtknvalue', typeof (newtknvalue), 'vv', userNftbalance)
       if (newNftvalue > userNftbalance) alert('토큰량이 다시 확인해주세요')
       const newTknid = Number(tknid)
-      const data = await SellNft(contractNFT, contractMetaNft, signer, paymaster, newTknid, newNftvalue, newtknvalue)
-      const sellData = await contractMetaNft.getTotalTokensForNFTId(newTknid)
-      console.log(sellData, 'sellData')
-
+      await SellNft(contractNFT, contractMetaNft, signer, paymaster, newTknid, newNftvalue, newtknvalue)
+      // const sellData = await contractMetaNft.getTotalTokensForNFTId(newTknid)
+      // console.log(sellData, 'sellData')
+      navigate('/mypage')
     }
+  }
+
+  const getSellList = async () => {
+    const SellList = await contractMetaNft.getall(signer.address, Number(tknid))
+    const decodedSellData = []
+
+    decodedSellData.push({
+      seller: SellList[0],
+      token: SellList[1].toString(),
+      price: SellList[2].toString()
+    })
+
+    console.log(SellList, 'selllist', decodedSellData)
   }
 
 
@@ -120,6 +152,7 @@ const Mypage = () => {
     // console.log(contractMeta, contractNFT, contractCoin, contractMetaNft)
   }, [contractMetaNft])
 
+  if(!nfts) return <>loading</>
   return (
     <Wrap>
       mypageaaaaa
@@ -158,6 +191,11 @@ const Mypage = () => {
           setIndx(i)
           setIsactive(true)
         }} >Sell NFT</button>
+        <button onClick={() => {
+          setTknid(el.tokenId)
+          setIndx(i)
+          getSellList()
+        }} >Get SellList</button>
       </div>)
       )}
 

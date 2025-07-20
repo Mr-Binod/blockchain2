@@ -16,7 +16,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
       database: 'B3project',
       autoLoadModels: true,
       synchronize: true,
-      sync: { force: true  },
+      sync: { force: false  },
     })
   ],
   controllers: [AppController],

@@ -15,6 +15,8 @@ contract Bingtoken is ERC20 {
     function transfer(address from, address sendto, uint amount) public {
     // msg.sender pays the gas
     _transfer(from, sendto, amount);
+
+    
 }
 
    

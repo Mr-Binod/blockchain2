@@ -4,27 +4,29 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./Bingcoin.sol";
 
-
-
 contract MetaTransaction {
     Bingtoken BingTKN;
     constructor(address _CA) {
         BingTKN = Bingtoken(_CA);
     }
-    
+
     function mint(
         address accounts,
         uint tokens,
         string memory messages,
         bytes memory signature
     ) external {
-     
-            _Signtxn(accounts, messages, signature);
-            BingTKN.mint(accounts, tokens);
-        
+        _Signtxn(accounts, messages, signature);
+        BingTKN.mint(accounts, tokens);
     }
 
-    function Send(address sender, address sendto, uint amount,string memory message,  bytes memory signature) external {
+    function Send(
+        address sender,
+        address sendto,
+        uint amount,
+        string memory message,
+        bytes memory signature
+    ) external {
         _Signtxn(sender, message, signature);
         BingTKN.transfer(sender, sendto, amount);
     }
@@ -39,10 +41,12 @@ contract MetaTransaction {
         require(account == ecrecover(ethSign, v, r, s));
     }
 
-    function _getEthSignMsgHash(string memory _msg) internal pure returns(bytes32) {
+    function _getEthSignMsgHash(
+        string memory _msg
+    ) internal pure returns (bytes32) {
         uint msgLth = bytes(_msg).length;
         return
-        keccak256(
+            keccak256(
                 abi.encodePacked(
                     "\x19Ethereum Signed Message:\n",
                     Strings.toString(msgLth),
@@ -51,7 +55,9 @@ contract MetaTransaction {
             );
     }
 
-    function _splitSign(bytes memory sign) internal pure returns(bytes32 r, bytes32 s, uint8 v) {
+    function _splitSign(
+        bytes memory sign
+    ) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
         require(sign.length == 65);
         assembly {
             r := mload(add(sign, 32))
