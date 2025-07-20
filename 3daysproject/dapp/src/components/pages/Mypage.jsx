@@ -1,12 +1,167 @@
-import React from 'react'
+import { id } from 'ethers'
+import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { styled } from "styled-components"
+import { SellNft } from '../../api/Contract'
 
+
+const Wrap = styled.div`
+  position: relative;
+`
+
+const Divform = styled.div`
+  display: flex;
+  position: abosolute;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  z-index: 1000; 
+  .Tokenform {
+    width: 450px;
+    height: 280px;
+    position: fixed;
+    top: 30%; left: -50%;
+    transform: translateX(-50%);
+    left: 50%;
+    z-index: 1000; /* above other content */
+    background: rgba(0,0,0,0.03); 
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: column;
+    background-color: #e7d988;
+    border-radius: 15px;
+    padding: 40px;
+    box-sizing: border-box;
+    font-size: 18px;
+  }
+
+  input {
+    width: 250px;
+    height: 30px;
+    background-color:#fdf0e5;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    padding : 0 10px;
+  }
+
+  .Divbtn{
+    button {
+      height: 35px;
+      width: 120px;
+      margin : 0 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    button:hover {
+      background-color: #9de7a3
+    }
+  }
+`
 const Mypage = () => {
+
+  const [isactive, setIsactive] = useState(false)
+  const [userbalance, setUserbalance] = useState(null)
+  const [tknid, setTknid] = useState("")
+  const [idindx, setIndx] = useState("")
+  const { signer, contractMeta, contractNFT, paymaster, contractCoin, contractMetaNft } = useSelector(state => state.walletReducer)
+
+  const [nfts] = useSelector((state) => state.NftsReducer)
+  const user = useSelector((state) => state.LoginReducer.user)
+  console.log(nfts, 'GG', user)
+
+  const imgpath = (img) => {
+    const httpUrl = img.replace("ipfs://", "http://gateway.pinata.cloud/ipfs/");
+    console.log(httpUrl, 'url11')
+    return httpUrl
+  }
+  useEffect(() => {
+    console.log(userbalance, 'userbalance')
+    console.log(signer)
+  }, [])
+
+  useEffect(() => {
+    // const data = userBalance(signer.address, contractCoin)
+    // setUserbalance(data)
+  }, [])
+  const sellNft = async (e) => {
+    // alert(Number(nfts[i].balance))
+    e.preventDefault();
+    setIsactive(false)
+    const userNftbalance = Number(nfts[idindx].balance)
+    const userNftindx = nfts[idindx].tokenId
+
+    if (userNftindx === tknid && userNftbalance > 0) {
+      const { NfttknValue: { value: Nftvalue }, tknValue: { value: tknvalue } } = e.target;
+      const newNftvalue = Number(Nftvalue)
+      const newtknvalue = Number(tknvalue)
+      console.log(newNftvalue, 'newNftvalue', typeof (newNftvalue), 'vv', userNftbalance)
+      console.log(newtknvalue, 'newtknvalue', typeof (newtknvalue), 'vv', userNftbalance)
+      if (newNftvalue > userNftbalance) alert('토큰량이 다시 확인해주세요')
+      const newTknid = Number(tknid)
+      const data = await SellNft(contractNFT, contractMetaNft, signer, paymaster, newTknid, newNftvalue, newtknvalue)
+      const sellData = await contractMetaNft.getTotalTokensForNFTId(newTknid)
+      console.log(sellData, 'sellData')
+
+    }
+  }
+
+
+  useEffect(() => {
+
+    // console.log(isactive, 'ee')
+    // console.log(tknid, 'ee')
+    // console.log(idindx, 'ee')
+  }, [isactive, tknid, idindx])
+
+  useEffect(() => {
+    // console.log(contractMeta, contractNFT, contractCoin, contractMetaNft)
+  }, [contractMetaNft])
+
   return (
-    <div>
-      mypage
-      <Link to="/">mainpage</Link>
-    </div>
+    <Wrap>
+      mypageaaaaa
+      <Link to="/main">mainpage</Link>
+
+      {isactive && <Divform><form action="" className='Tokenform' onSubmit={(e) => sellNft(e)}>
+        <div>
+
+          <label htmlFor="">판매할 토큰 량을 입력해주세요</label> <br />
+          <input type="number" name='NfttknValue' /> <br />
+        </div>
+
+        <div>
+
+          <label htmlFor="">한 개개당 판매 가격</label> <br />
+          <input type="number" name='tknValue' /> <br />
+        </div>
+
+        <div className='Divbtn'>
+
+          <button type='button' onClick={() => {
+            setIsactive(false)
+          }} >cancel</button>
+          <button>confirm</button>
+        </div>
+      </form>
+      </Divform>}
+      <h3>NFTs:</h3>
+      {nfts?.map((el, i) =>
+      (<div key={i} >
+        <img src={imgpath(el.uridata.image)} width="200px" />
+        <div>{el.balance}</div>
+        <div>{el.tokenId}</div>
+        <button onClick={() => {
+          setTknid(el.tokenId)
+          setIndx(i)
+          setIsactive(true)
+        }} >Sell NFT</button>
+      </div>)
+      )}
+
+    </Wrap>
   )
 }
 

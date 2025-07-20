@@ -1,12 +1,15 @@
 import axios from "axios"
-import { ethers } from "ethers";
+import { ContractEventPayload, ethers } from "ethers";
+import { useSelector } from "react-redux";
 
 const pinata_api_key = "84341dedc5714b228c1f";
 const pinata_secret_api_key = "3a0293c0918269143c81ab9c4ef791d4f83b0d7f925ddb8aafd43e4c1e3e819d"
 
 
+
+
 const uploadIPFS = async (formdata, paymaster, contractMetaNft, contractNFT, signer) => {
-    const ContractNFT = contractMetaNft.connect(paymaster)
+    const ContractMetaNFT = contractMetaNft.connect(paymaster)
     try {
         console.log('잡아')
         const { data } = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formdata, {
@@ -22,15 +25,15 @@ const uploadIPFS = async (formdata, paymaster, contractMetaNft, contractNFT, sig
         if (!paymaster) {
             throw new Error('Signer is not available');
         }
-        const transaction = await ContractNFT.setTokenURI(JsonURI, signer.address);
+        const transaction = await ContractMetaNFT.setTokenURI(JsonURI, signer.address);
         await delay(300);
         await transaction.wait();
         alert("ipfs 업로드 이후 민팅 완료");
         try {
-            const ownerTokens = await ContractNFT.getAllTokenBalances(signer.address);
+            const ownerTokens = await ContractMetaNFT.getAllTokenBalances(signer.address);
             await delay(300);
             console.log('Owner tokens:', ownerTokens, data);
-            return ({image : `http://gateway.pinata.cloud/ipfs/${data.IpfsHash}`, data})
+            return ({ image: `http://gateway.pinata.cloud/ipfs/${data.IpfsHash}`, data })
         } catch (error) {
             console.log('Error calling ownerToken:', error.message);
         }
@@ -43,7 +46,7 @@ const uploadIPFS = async (formdata, paymaster, contractMetaNft, contractNFT, sig
 
 const uploadJsonMetadataIPFS = async (name, description, image) => {
     const metadata = {
-        name, 
+        name,
         description,
         image
     }
@@ -80,10 +83,8 @@ const GetBTKcoin = async (signer, paymaster, contractMeta, contractCoin) => {
     }
     const msgToSign = JSON.stringify(txmsg)
     const signature = await signer.signMessage(msgToSign);
-    await delay(300);
     // console.log(paymaster.getAddress(), 'paymasteraddress', signature, txmsg)
     const Address = signer.getAddress()
-    await delay(300);
     console.log('getcoin', paymasterCnt)
     const tx = await paymasterCnt.mint(Address, 120, msgToSign, signature)
     await tx.wait()
@@ -95,31 +96,66 @@ const GetBTKcoin = async (signer, paymaster, contractMeta, contractCoin) => {
 }
 
 const userBalance = async (signer, contractCoin) => {
-    const balance = await contractCoin?.balanceOf(signer.address)
-    delay(1000)
-    console.log(balance, 'asd')
+    if (!contractCoin || !signer) return;
+    const balance = await contractCoin.balanceOf(signer.address)
+    // delay(1000)
+    // console.log(balance, 'asd')
     return balance
 }
 // const getOwnerNft
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+}
+
+const SellNft = async (contractNFT, contractMetaNft, signer, paymaster, nftid, token, price) => {
+    if(!paymaster) return;
+    const addrs = await contractMetaNft.getAddress()
+    console.log('items',addrs , signer.address, paymaster, nftid, token, price)
+
+    const reCharge = await paymaster.sendTransaction({
+        to : signer.address,
+        value : ethers.parseEther("0.0015")
+    })
+    await reCharge.wait()
+
+    await contractNFT.connect(signer).setApprovalForAll(paymaster.getAddress(), true);
+
+    // 2. Paymaster calls SellNFT on meta contract
+    const metaNftWithPaymaster = contractMetaNft.connect(paymaster);
+    const tx = await metaNftWithPaymaster.SellNFT(signer.getAddress(), nftid, token, price);
+    await tx.wait();
+    console.log(tx)
+    // return data
+
+    const sellData = await contractMetaNft.getall(nftid)
+    console.log(sellData)
+    return sellData 
+}
+
+
 const userNft = async (userAddress, contractNFT) => {
-    if(!contractNFT) return
+    if (!contractNFT) return
     console.log(contractNFT, "contractnft")
-    const userNftids = await contractNFT?.userTokens(userAddress)
+    const userNftids = await contractNFT.userTokens(userAddress)
     console.log(userNftids, 'ids')
-    // const NftInfo = await contractNFT.balanceOf(userAddress)
     const ObjectNfts = [];
     for (const id of userNftids) {
-      const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
-      const Nfturi = await contractNFT.uri(id);
-      const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
-      ObjectNfts.push({ tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data });
+        const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
+        const Nfturi = await contractNFT.uri(id);
+        const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
+        ObjectNfts.push({ tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data });
     }
-    console.log(ObjectNfts,'ss')
+    // const ObjectNfts = await Promise.all(
+    //     userNftids.map(async (id) => {
+    //       const Nftshare = await contractNFT.getCurrentBalance(userAddress, id);
+    //       const Nfturi = await contractNFT.uri(id);
+    //       const Uridata = await axios.get(`http://gateway.pinata.cloud/ipfs/${Nfturi}`);
+    //       return { tokenId: id, balance: Nftshare, uri: Nfturi, uridata: Uridata.data };
+    //     })
+    //   );
+    console.log(ObjectNfts, 'ss')
     return ObjectNfts;
 }
 
 
-export { uploadIPFS, GetBTKcoin, userBalance, userNft } 
+export { uploadIPFS, GetBTKcoin, userBalance, userNft, SellNft } 

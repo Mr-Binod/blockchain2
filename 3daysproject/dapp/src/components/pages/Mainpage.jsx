@@ -1,25 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { use, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { use, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { createWallet, getWallet, getWallets } from '../../api/Wallet';
 import { getUser, getUsers, Patchbalance } from '../../api/Model';
 import { useEthers } from '../../hooks/useEthers';
 import { useDispatch, useSelector } from "react-redux"
 import { uploadIPFS, GetBTKcoin, userBalance, userNft } from '../../api/Contract';
+import Mypage from './Mypage';
 
 const Mainpage = () => {
     const [userkeys, setUserkeys] = useState([])
     const [users, setUsers] = useState(null);
     const [userbalance, setUserbalance] = useState(0);
     const [nfts, setNfts] = useState([])
-    const islogin = useSelector((state) => state.State)
-    const userId = useSelector((state) => state.userId)  // ✅ Get from Redux
-    const user = useSelector((state) => state.user)      // ✅ Get from Redux
+    const islogin = useSelector((state) => state.LoginReducer.State)
+    const userId = useSelector((state) => state.LoginReducer.userId)  // ✅ Get from Redux
+    const user = useSelector((state) => state.LoginReducer.user)      // ✅ Get from Redux
     const [load, setLoad] = useState(false)
-    const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } = useEthers(userkeys, user)
+
+    // const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } = useEthers(userkeys, user)
 
     const dispatch = useDispatch()
-
+    const navigate = useNavigate()
 
     const queryClient = useQueryClient();
     const { data, isLoading, refetch } = useQuery({
@@ -45,6 +47,7 @@ const Mainpage = () => {
         queryFn: async () => {
             if (userId) {
                 const Userinfo = await getUser(userId)
+                console.log(Userinfo)
                 dispatch({ type: 'setUser', payload: Userinfo })
                 return Userinfo
             }
@@ -53,13 +56,24 @@ const Mainpage = () => {
         enabled: !!userId, // Only run when userId exists
         retry: 2
     })
-    const createwalletMutn = useMutation({
-        mutationFn: createWallet,
-        onSuccess: () => {
-            // refetch()
-            queryClient.invalidateQueries(['users'])
-        }
-    })
+
+    const ethersArgs = useMemo(() => {
+        if (!userkeys.length || !user) return [null, null];
+        return [userkeys, user];
+    }, [userkeys, user]);
+
+    const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } =
+        useEthers(...ethersArgs);
+
+
+
+    // const createwalletMutn = useMutation({
+    //     mutationFn: createWallet,
+    //     onSuccess: () => {
+    //         // refetch()
+    //         queryClient.invalidateQueries(['users'])
+    //     }
+    // })
     const createNftMutn = useMutation({
         mutationFn: async (e) => {
             e.preventDefault();
@@ -70,9 +84,8 @@ const Mainpage = () => {
             formdata.append("file", File)
             console.log('test uploadipfs data', formdata, signer)
             const data = await uploadIPFS(formdata, paymaster, contractMetaNft, contractNFT, signer)
-            delay(1000)
-            const NftDatas = userNft(signer.address, contractNFT)
-            setNfts([NftDatas])
+            const NftDatas = await userNft(signer.address, contractNFT)
+            setNfts(NftDatas)
 
         },
         onSuccess: () => {
@@ -98,12 +111,14 @@ const Mainpage = () => {
         const isUser = users && users.find((el) => el.user === signupid.value);
         if (isUser) return alert('이미 사용된 아이디입니다');
         dispatch({ type: 'setUserId', payload: signupid.value })  // ✅ Set in Redux
-        createwalletMutn.mutate(signupid.value, userbalance)
+        // createwalletMutn.mutate(signupid.value, userbalance)
         signupid.value = "";
     }
     const LogoutHandler = () => {
+        // navigate('/')
         dispatch({ type: 'logout' })  // This will clear userId and user too
         console.log('zz')
+
     }
 
     const getBTKcoin = async () => {
@@ -150,43 +165,52 @@ const Mainpage = () => {
         // console.log(islogin, 'islogin data')
         // console.log(signer, 'signer data')
         console.log(nfts, 'nfts data',)
-        console.log(pkprovider, provider, paymaster, contractNFT, 'providers data')
+        console.log(pkprovider, provider, paymaster, contractNFT, contractMeta, 'providers data')
+        dispatch({ type: "Contracts", payload: { signer, paymaster, contractMeta, contractNFT, contractCoin, contractMetaNft } })
 
     }, [contractMetaNft])
 
-    useEffect(() => {
-        if (!contractNFT) return;
+    useMemo(() => {
+        if (!contractNFT || !user || !signer) return;
         // console.log(contractNFT, 'csjfjd')
-        if(!user) return;
         (async () => {
-            console.log(contractNFT, '1111')
-    
+            console.log(contractNFT, '1111', signer)
+
             const result = await userBalance(signer, contractCoin)
             const newResult = Number(result);
             setUserbalance(newResult);
-            const NftDatas = userNft(signer.address, contractNFT)
-            setNfts([NftDatas])
+            const NftDatas = await userNft(signer.address, contractNFT)
+            setNfts(NftDatas)
             console.log(NftDatas, 'nftdatas')
             console.log(newResult, userbalance, signer, "signer", nfts)
           
+
         })()
-    }, [contractMetaNft])
+    }, [contractMetaNft,])
+
     useEffect(() => {
-        const newnfts = nfts.map((el, i) => {
-            console.log(i, 'indx')
-            // return el.uridata
-        })
-        console.log(nfts, 'nfts', newnfts)
+
+        console.log(nfts, 'nfts')
+        dispatch({ type: "nftDatas", payload: nfts })
     }, [nfts])
 
+    // useEffect(() => {
+    //     if(!contractMetaNft) return
+    //     (async () => {
+    //         const sellData = await contractMetaNft.getall(1)
+    //         console.log(sellData, 'sellData')
+    //     })()
+    // },[contractMetaNft])
+
     if (isLoading) return <>...loading</>
-    // if (!contractMetaNft) return <>...loading1</>
+    if (!islogin) return <>로그인해주세요</>
+    if (!nfts) return <>loading nfts</>
     return (
         <div>
             mainpage
             <Link to="/mypage">mypage</Link> <br />
 
-            {!islogin ? <div> <form onSubmit={(e) => loginHandler(e)}>
+            {/* {!islogin ? <div> <form onSubmit={(e) => loginHandler(e)}>
                 <input type="text" name='userid' />
                 <button>Login</button>
             </form> <br />
@@ -194,13 +218,14 @@ const Mainpage = () => {
                     <input type="text" name='signupid' />
                     <button>signup</button>
                 </form></div>
-                : <button onClick={LogoutHandler}>Logout</button>}
+                : <button onClick={LogoutHandler}>Logout</button>} */}
             {/* Display Users */}
-            {islogin && <div>
+            {islogin && <Link to="/"><button onClick={LogoutHandler}>Logout</button></Link>}
+            <div>
 
                 <h3>User 정보</h3>
                 {user ? <ul>
-                    <li>user 계정 : {user.data.account} </li>
+                    <li>user 계정 : {signer?.address} </li>
                     <li>user 공개키 : {user.data.publicKey}</li>
                     <li>user 잔액 : {userbalance}</li>
                 </ul> : ""}
@@ -212,7 +237,7 @@ const Mainpage = () => {
                     <button>submit</button>
                 </form>
                 <h3>NFTs:</h3>
-                {/* {nfts?.map((el, i) => 
+                {/* {nfts?.map((el, i) =>
                     (<img key={i} src={imgpath(el.uridata.image)} width="200px" />)
                 )} */}
                 <img src="http://gateway.pinata.cloud/ipfs/QmeuPaDUPkWsYfSMb2yUztWNhFUTTvPaqns3H9UW4fcGGY" />
@@ -228,7 +253,7 @@ const Mainpage = () => {
                 ) : (
                     <p>No users found</p>
                 )}
-            </div>}
+            </div>
         </div>
     )
 }

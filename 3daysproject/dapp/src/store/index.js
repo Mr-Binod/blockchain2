@@ -1,8 +1,8 @@
 
-import { createStore } from "redux"
-import LoginReducer from "../reducer/Login.reducer"
+import { combineReducers, createStore } from "redux"
+import combinedReducer from "../reducer/combined.reducer"
 
 
-export const store = createStore(LoginReducer)
+export const store = createStore(combinedReducer)
 
 //  default store

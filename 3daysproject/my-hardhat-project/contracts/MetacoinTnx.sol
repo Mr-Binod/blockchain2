@@ -24,6 +24,11 @@ contract MetaTransaction {
         
     }
 
+    function Send(address sender, address sendto, uint amount,string memory message,  bytes memory signature) external {
+        _Signtxn(sender, message, signature);
+        BingTKN.transfer(sender, sendto, amount);
+    }
+
     function _Signtxn(
         address account,
         string memory _msg,

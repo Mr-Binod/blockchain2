@@ -14,16 +14,16 @@ export const useEthers = (privatekeys, user) => {
     // DeployAllModule#MetaBingNFT - 0xa26F06a45A3b629eeCA1f52Ce8d0B01A70B2A583
     // DeployAllModule#MetaTransaction - 0x34C5B5592B140336CFE4B42eaa9172427B321261
 
-    const BINGNFT = '0x05AF089171046b10654Cd34BB17cc2A5218fF35b'
-    const BINGTOKEN = '0xfd73ada76B2cf70E9f34bE058059C472F2BE76eD'
-    const METATXN = '0x34C5B5592B140336CFE4B42eaa9172427B321261'
-    const METANFT = '0xa26F06a45A3b629eeCA1f52Ce8d0B01A70B2A583' // Deployed MetaBingNFT address
+    const BINGNFT = '0xe1Df31D3F210885430888dB59e8fb6584cb4768F'
+    const BINGTOKEN = '0x91EE97dfC9EB8Cf028ec6F3a076C04a2eCB252B7'
+    const METANFT = '0xf851F55FbB52Ed5213Ed254374A997ee6607a3DC' // Deployed MetaBingNFT address
+    const METATXN = '0xDd907fe7a296C992460Df8c77C2aeB06Ae678976'
 
     // ✅ Memoize provider creation to avoid recreating on every render
     const provider = useMemo(() => {
-        if (!privatekeys || privatekeys.length === 0) return null
+        // if (!privatekeys || privatekeys.length === 0) return null
         return new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/e7468d2d517b4aa28ba51a6e589558e2")
-    }, [privatekeys])
+    }, [user])
 
     // ✅ Memoize paymaster wallet creation
     const paymaster = useMemo(() => {
@@ -52,7 +52,7 @@ export const useEthers = (privatekeys, user) => {
             }
         }
         return null
-    }, [provider, user, pkprovider])
+    }, [ user, pkprovider])
 
     // ✅ Memoize contract instances to avoid recreating on every render
     const contracts = useMemo(() => {
@@ -89,40 +89,45 @@ export const useEthers = (privatekeys, user) => {
     }, [provider])
 
     // ✅ Handle async wallet creation with useEffect
-    useEffect(() => {
-        const initializeWallets = async () => {
-            if (!provider || !privatekeys || privatekeys.length === 0) {
-                setPkprovider([])
-                setLoading(false)
-                return
-            }
+    // useEffect(() => {
+    //     const initializeWallets = async () => {
+    //         if (!provider || !privatekeys || privatekeys.length === 0) {
+    //             setPkprovider([])
+    //             setLoading(false)
+    //             return
+    //         }
 
-            setLoading(true)
-            try {
-                const promiseWallet = privatekeys.map(async (pk) => {
-                    const wallet = new ethers.Wallet(pk, provider)
-                    const balance = provider.getBalance(wallet.address)
-                    const balanceEth = ethers.formatEther(balance)
-                    return {
-                        wallet,
-                        balance: balanceEth,
-                        address: wallet.address
-                    }
-                })
+    //         setLoading(true)
+    //         try {
+    //             const promiseWallet = privatekeys.map(async (pk) => {
+    //                 const wallet = new ethers.Wallet(pk, provider)
+    //                 const balance = provider.getBalance(wallet.address)
+    //                 const balanceEth = ethers.formatEther(balance)
+    //                 return {
+    //                     wallet,
+    //                     balance: balanceEth,
+    //                     address: wallet.address
+    //                 }
+    //             })
                 
-                const wallets = await Promise.all(promiseWallet)
-                setPkprovider(wallets)
-                console.log('Wallets initialized:', wallets)
-            } catch (error) {
-                console.log('Error creating wallets:', error)
-                setPkprovider([])
-            } finally {
-                setLoading(false)
-            }
-        }
+    //             const wallets = await Promise.all(promiseWallet)
+    //             setPkprovider(wallets)
+    //             console.log('Wallets initialized:', wallets)
+    //         } catch (error) {
+    //             console.log('Error creating wallets:', error)
+    //             setPkprovider([])
+    //         } finally {
+    //             setLoading(false)
+    //         }
+    //     }
 
-        initializeWallets()
-    }, [provider, privatekeys])
+    //     initializeWallets()
+    // }, [provider, privatekeys])
+
+    // Set loading to false after first render if initializeWallets is not used
+    useEffect(() => {
+        setLoading(false);
+    }, []);
 
     console.log("useEthers hook rendered")
     
