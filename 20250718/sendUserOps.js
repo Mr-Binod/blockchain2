@@ -162,7 +162,6 @@ const TokenAbi = [
 		"type": "function"
 	}
 ]
-
 // 배포된 토큰 erc20에 call 메시지를 요청 할수 있는 바이트 코드
 const entryPointAbi = [
 	{
@@ -274,11 +273,9 @@ const entryPointAbi = [
 		"type": "function"
 	}
 ]
-
 // 1. 엔트리포인트에 요청 userOps
 // 2. 엔트리포인트 검증 로직 이후에 스마트 계정의 exeute () => 시그니처
 // 3. 스마트계정의 호출 함수의 시그니처 바이트코드가 필요하다
-
 const smartAccountAbi = [
 	{
 		"inputs": [

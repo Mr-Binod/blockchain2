@@ -298,11 +298,6 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
           "name": "receiver",
           "type": "address"
         },

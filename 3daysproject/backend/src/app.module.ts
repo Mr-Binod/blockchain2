@@ -11,8 +11,8 @@ import { SequelizeModule } from '@nestjs/sequelize';
       dialect: 'mysql', // or 'postgres', etc.
       host: 'localhost',
       port: 3306,
-      username: 'master',
-      password: 'admin123',
+      username: 'myid',
+      password: '1994!BDs',
       database: 'B3project',
       autoLoadModels: true,
       synchronize: true,

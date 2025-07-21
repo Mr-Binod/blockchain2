@@ -14,10 +14,8 @@ contract SmartAccountFactory {
     constructor(address _entryPoint) {
         entryPoint = _entryPoint;
     }
-
 // create2 => 미리실행 시켜보고 결과를 받아서 사용할수있다. 컨트랙트 조회가 안됬다. 0x
 // 토큰 소유자 혹은 이더를가지고 있었다. => 미리 CA를 호출해서 사용할수도 있다.
-
     // 핵심이 지갑 생성 로직
     // owner userops를 생성해서 보내는 스마트 지갑의 소유자
     function createAccount (address owner) external returns(address smartAccount) {

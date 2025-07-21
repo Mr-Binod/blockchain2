@@ -66,7 +66,7 @@ contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
         // payable(item.seller).transfer(msg.value);
         ownerNfts[receiver][nftid] += item.token;
         _addTokenIdToUser(receiver, nftid);
-        delete items[sender][nftid];
+        delete items[address(this)][nftid];
     }
 
     function cancelSale(uint256 nftid, address sender) external {

@@ -89,10 +89,7 @@ const Mypage = () => {
     console.log(signer)
   }, [])
 
-   useEffect(() => {
-        console.log(nfts, 'nfts')
-        dispatch({ type: "nftDatas", payload: nfts })
-    }, [nfts])
+  
 
     useEffect(() => {
       async function fetchNfts() {
@@ -105,6 +102,11 @@ const Mypage = () => {
       // No return value!
     }, [contractNFT]);
   
+
+     useEffect(() => {
+        console.log(nfts, 'nfts')
+        dispatch({ type: "nftDatas", payload: nfts })
+    }, [nfts])
   const sellNft = async (e) => {
     // alert(Number(nfts[i].balance))
     e.preventDefault();
