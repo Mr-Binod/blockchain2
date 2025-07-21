@@ -168,9 +168,14 @@ const getAllListedNftids = async (contractNft) => {
 }
 
 
-const BuyNft = async (sender, receiver, nftid, price, contractMetaNft, paymaster) => {
+const BuyNft = async (sender, receiver, nftid, price, contractMetaNft,contractNFT, paymaster) => {
     const paymasterContract = contractMetaNft.connect(paymaster)
-    await paymasterContract.BuyNFT(sender, receiver, nftid, price)
+    // const reCharge = await paymaster.sendTransaction({
+    //     to: contractNFT.address,
+    //     value: ethers.parseEther("0.0015")
+    // })
+    // await reCharge.wait()
+    await paymasterContract.BuyNFT( receiver, nftid, price)
 
 }
 

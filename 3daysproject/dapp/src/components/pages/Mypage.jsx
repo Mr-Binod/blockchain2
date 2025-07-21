@@ -123,6 +123,7 @@ const Mypage = () => {
       await SellNft(contractNFT, contractMetaNft, signer, paymaster, newTknid, newNftvalue, newtknvalue)
       // const sellData = await contractMetaNft.getTotalTokensForNFTId(newTknid)
       // console.log(sellData, 'sellData')
+      alert("nft 판매 환료됬었습니다")
       navigate('/mypage')
     }
   }

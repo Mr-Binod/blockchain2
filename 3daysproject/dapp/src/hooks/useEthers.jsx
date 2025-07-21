@@ -14,10 +14,10 @@ export const useEthers = (privatekeys, user) => {
     // DeployAllModule#MetaBingNFT - 0xa26F06a45A3b629eeCA1f52Ce8d0B01A70B2A583
     // DeployAllModule#MetaTransaction - 0x34C5B5592B140336CFE4B42eaa9172427B321261
 
-    const BINGNFT = '0x397D040c53165C7f0DEBF8aab3856f0a679dc479'
-    const BINGTOKEN = '0xee121401d89D0fD00c02552EA9E4ecb57C0d5388'
-    const METANFT = '0x04164885C1E2a53D8d712bE9cdB9F3a851cE7f75' // Deployed MetaBingNFT address
-    const METATXN = '0x5727a7Fe406c03cF029B3029826d36161fCeBE19'
+    const BINGNFT = '0x3642bb1fa8a8873E78C8A493be588039194f02d1'
+    const BINGTOKEN = '0xF7ED26b72E3344bde062D958E5a9547214130a07'
+    const METANFT = '0x0323c2B015D357832E5a4855c79A3C5DC7425c15' // Deployed MetaBingNFT address
+    const METATXN = '0xCBAf07E86cA68428c64Ff7827C7AAC85BEa56fF6'
 
     // ✅ Memoize provider creation to avoid recreating on every render
     const provider = useMemo(() => {

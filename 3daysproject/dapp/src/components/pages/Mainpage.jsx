@@ -21,10 +21,8 @@ const Mainpage = () => {
     const [load, setLoad] = useState(false)
 
     // const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } = useEthers(userkeys, user)
-
     const dispatch = useDispatch()
     const navigate = useNavigate()
-
     const queryClient = useQueryClient();
     const { data, isLoading, refetch } = useQuery({
         queryKey: ["data"],
@@ -42,7 +40,6 @@ const Mainpage = () => {
         enabled: true,
         retry: 2
     })
-
     // ✅ Separate query for user data
     const { data: userData, isLoading: userLoading } = useQuery({
         queryKey: ["user", userId],
@@ -58,21 +55,17 @@ const Mainpage = () => {
         enabled: !!userId, // Only run when userId exists
         retry: 2
     })
-
     const ethersArgs = useMemo(() => {
         if (!userkeys.length || !user) return [null, null];
         return [userkeys, user];
     }, [userkeys, user]);
-
     const { pkprovider, provider, paymaster, signer, contractMeta, contractNFT, contractCoin, contractMetaNft } =
         useEthers(...ethersArgs);
     function delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-
     useEffect(() => {
         if (!contractNFT) return;
-
         const fetchSellData = async () => {
             try {
                 const data = await getAllListedNftids(contractNFT);
@@ -99,7 +92,6 @@ const Mainpage = () => {
                 }));
                 const uniqueSellData = [];
                 const seen = new Set();
-
                 for (const el of result) {
                     const key = `${el.address.toLowerCase()}-${el.nftid.toString()}`;
                     if (!seen.has(key)) {
@@ -109,7 +101,6 @@ const Mainpage = () => {
                 }
                 setSellData(uniqueSellData); // flatten if you want a single array
                 console.log(uniqueSellData, 'uniqueSellData');
-
             } catch (error) {
                 // alert('fetchsell' + error)
                 console.log('error')
@@ -186,12 +177,19 @@ const Mainpage = () => {
     }
 
     const BuyNfthandler = async (sender, nftid, price) => {
-        const paymasterNft = contractMetaNft.connect(paymaster);
+        const paymasterNft = contractNFT.connect(paymaster);
         const paymasterCoin = contractMeta.connect(paymaster);
+        // const reCharge = await paymaster.sendTransaction({
+        //     to: contractNFT.address,
+        //     value: ethers.parseEther("0.0015")
+        // })
+        // await reCharge.wait()
+        console.log(signer.address, nftid, price)
         await paymasterNft.BuyNFT(sender, signer.address, nftid, price);
         const msg = 'hello'
         const signature = signer.signMessage(msg)
-        // await paymasterCoin.Send(signer.address, sender, price, msg, signature)
+        // const boughtNft = await contractNFT.balanceOf(signer.address, nftid)
+        await paymasterCoin.Send(signer.address, sender, price, msg, signature)
         console.log('SS')
         navigate('/main')
     }
