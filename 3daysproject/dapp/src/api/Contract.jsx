@@ -112,11 +112,13 @@ const SellNft = async (contractNFT, contractMetaNft, signer, paymaster, nftid, t
     if (!paymaster) return;
     const addrs = await contractMetaNft.getAddress()
     // console.log('items', addrs, signer.address, paymaster, nftid, token, price)
-    const reCharge = await paymaster.sendTransaction({
-        to: signer.address,
-        value: ethers.parseEther("0.0015")
-    })
-    await reCharge.wait()
+    const checknfttokens = await (contractNFT.balanceOf(signer.address, nftid))
+    console.log(checknfttokens, 'checknfttokens')
+    // const reCharge = await paymaster.sendTransaction({
+    //     to: signer.address,
+    //     value: ethers.parseEther("0.0015")
+    // })
+    // await reCharge.wait()
     await contractNFT.connect(signer).setApprovalForAll(paymaster.getAddress(), true);
     const metaNftWithPaymaster = contractMetaNft.connect(paymaster);
     const tx = await metaNftWithPaymaster.SellNFT(signer.getAddress(), nftid, token, price);

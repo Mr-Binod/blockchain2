@@ -51,7 +51,6 @@ contract EntryPoint {
                     op.signature // 서명의 값
                 )
             );
-
             require(success, "isValidSignature erorr");
 
             // 대리 호출 로직

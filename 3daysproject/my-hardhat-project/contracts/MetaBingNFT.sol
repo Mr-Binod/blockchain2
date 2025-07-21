@@ -128,8 +128,8 @@ contract MetaBingNFT {
         bingNFT.SellNFT(sender, nftid, token, price);
     }
 
-    function BuyNFT(address sender, address receiver,  uint nftid, uint price) external  {
-        bingNFT.BuyNFT(sender, receiver, nftid, price);
+    function BuyNFT( address receiver,  uint nftid, uint price) external  {
+        bingNFT.BuyNFT( receiver, nftid, price);
     }
     // function BuyNFT(uint nftid) external payable {
     //     bingNFT.BuyNFT{value: msg.value}(nftid, msg.sender);

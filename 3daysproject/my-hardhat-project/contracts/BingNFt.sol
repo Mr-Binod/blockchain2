@@ -57,16 +57,16 @@ contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
         emit sellItemLists(sender, token, price);
     }
 
-    function BuyNFT(address sender, address receiver, uint256 nftid,  uint price) external {
-        Sellstake memory item = items[sender][nftid];
+    function BuyNFT( address receiver, uint256 nftid,  uint price) external {
+        Sellstake memory item = items[address(this)][nftid];
         require(item.price == price, "Incorrect price");
         require(receiver != item.seller, "Cannot buy your own NFT");
         require(item.seller != address(0), "NFT not for sale");
-        _safeTransferFrom(address(this), sender, nftid, item.token, "");
+        _safeTransferFrom(address(this), receiver, nftid, item.token, "");
         // payable(item.seller).transfer(msg.value);
         ownerNfts[receiver][nftid] += item.token;
         _addTokenIdToUser(receiver, nftid);
-        delete items[sender][nftid];
+        delete items[address(this)][nftid];
     }
 
     function cancelSale(uint256 nftid, address sender) external {
@@ -146,7 +146,7 @@ contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
         return userTokenIds[user];
     }
 
-    function getBalance(address owner, uint nftid) external view returns(uint memory) {
+    function getBalance(address owner, uint nftid) external view returns(uint) {
         return balanceOf(owner, nftid);
     }
 
