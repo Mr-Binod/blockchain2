@@ -32,7 +32,6 @@ const Mainpage = () => {
             setUsers(wallets)
             const privateKeys = wallets.map((el) => el.privateKey);
             setUserkeys(privateKeys);
-
             return ({ wallets })
         },
         refetchOnMount: true,
@@ -64,6 +63,8 @@ const Mainpage = () => {
     function delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+
     useEffect(() => {
         if (!contractNFT) return;
         const fetchSellData = async () => {
@@ -106,7 +107,6 @@ const Mainpage = () => {
                 console.log('error')
             }
         }
-
         fetchSellData();
     }, [contractNFT]);
 
@@ -188,9 +188,9 @@ const Mainpage = () => {
         await paymasterNft.BuyNFT(sender, signer.address, nftid, price);
         const msg = 'hello'
         const signature = signer.signMessage(msg)
-        // const boughtNft = await contractNFT.balanceOf(signer.address, nftid)
+        const boughtNft = await contractNFT.balanceOf(signer.address, nftid)
         await paymasterCoin.Send(signer.address, sender, price, msg, signature)
-        console.log('SS')
+        console.log('SS', msg, signature)
         navigate('/main')
     }
 
@@ -226,8 +226,6 @@ const Mainpage = () => {
         // console.log(signer, 'signer data')
         // console.log(nfts, 'nfts data',)
         // console.log(pkprovider, provider, paymaster, contractNFT, contractMeta, 'providers data')
-
-
     }, [contractMetaNft])
 
     useEffect(() => {
@@ -262,7 +260,6 @@ const Mainpage = () => {
             {/* Display Users */}
             {islogin && <Link to="/"><button onClick={LogoutHandler}>Logout</button></Link>}
             <div>
-
                 <h3>User 정보</h3>
                 {user ? <ul>
                     <li>계정 : {signer?.address} </li>

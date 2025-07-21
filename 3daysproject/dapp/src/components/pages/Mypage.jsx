@@ -83,30 +83,29 @@ const Mypage = () => {
 
   function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
+  }
+
   useEffect(() => {
     console.log(userbalance, 'userbalance')
     console.log(signer)
   }, [])
 
-  
+  useEffect(() => {
+    async function fetchNfts() {
+      if (!signer || !contractNFT) return;
+      await delay(1000)
+      const NftDatas = await userNft(signer.address, contractNFT);
+      setNfts(NftDatas);
+    }
+    fetchNfts();
+    // No return value!
+  }, [contractNFT]);
 
-    useEffect(() => {
-      async function fetchNfts() {
-        if (!signer || !contractNFT) return;
-        await delay(1000)
-        const NftDatas = await userNft(signer.address, contractNFT);
-        setNfts(NftDatas);
-      }
-      fetchNfts();
-      // No return value!
-    }, [contractNFT]);
-  
+  useEffect(() => {
+    console.log(nfts, 'nfts')
+    dispatch({ type: "nftDatas", payload: nfts })
+  }, [nfts])
 
-     useEffect(() => {
-        console.log(nfts, 'nfts')
-        dispatch({ type: "nftDatas", payload: nfts })
-    }, [nfts])
   const sellNft = async (e) => {
     // alert(Number(nfts[i].balance))
     e.preventDefault();
@@ -132,20 +131,16 @@ const Mypage = () => {
 
   const getSellList = async () => {
     const SellList = await contractMetaNft.getall(signer.address, Number(tknid))
-    const decodedSellData = []
-
+    const decodedSellData = [];
     decodedSellData.push({
       seller: SellList[0],
       token: SellList[1].toString(),
       price: SellList[2].toString()
     })
-
     console.log(SellList, 'selllist', decodedSellData)
   }
 
-
   useEffect(() => {
-
     // console.log(isactive, 'ee')
     // console.log(tknid, 'ee')
     // console.log(idindx, 'ee')
@@ -155,27 +150,21 @@ const Mypage = () => {
     // console.log(contractMeta, contractNFT, contractCoin, contractMetaNft)
   }, [contractMetaNft])
 
-  if(!nfts) return <>loading</>
+  if (!nfts) return <>loading</>
   return (
     <Wrap>
       mypageaaaaa
       <Link to="/main">mainpage</Link>
-
       {isactive && <Divform><form action="" className='Tokenform' onSubmit={(e) => sellNft(e)}>
         <div>
-
           <label htmlFor="">판매할 토큰 량을 입력해주세요</label> <br />
           <input type="number" name='NfttknValue' /> <br />
         </div>
-
         <div>
-
           <label htmlFor="">한 개개당 판매 가격</label> <br />
           <input type="number" name='tknValue' /> <br />
         </div>
-
         <div className='Divbtn'>
-
           <button type='button' onClick={() => {
             setIsactive(false)
           }} >cancel</button>
@@ -201,7 +190,6 @@ const Mypage = () => {
         }} >Get SellList</button>
       </div>)
       )}
-
     </Wrap>
   )
 }

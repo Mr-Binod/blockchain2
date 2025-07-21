@@ -32,8 +32,8 @@ console.log("개인키 : ",wallet.privateKey);
     console.log("잔액 : ", ethers.formatEther(balance))
 })();
 
-const CA = "0xF68ED6d82e6b46977E49C80e927308E37372813E";
-const abi = [
+const factoryCA = "0xF68ED6d82e6b46977E49C80e927308E37372813E";
+const factoryabi = [
 	{
 		"inputs": [
 			{
@@ -84,7 +84,7 @@ const abi = [
 		"type": "function"
 	}
 ]
-const factory = new ethers.Contract(CA, abi, wallet);
+const factory = new ethers.Contract(factoryCA, factoryabi, wallet);
 // eth이더가 없어 수수료를 지불하지 못해
 // 대납자가 대신 지불을 해줘야하고
 
