@@ -15,7 +15,7 @@ contract SoonToken {
 
     constructor() {
         owner = msg.sender;
-    }    
+    }
 
     function mint(address to, uint amount) external {
         balanceOf[to] += amount;
@@ -23,7 +23,7 @@ contract SoonToken {
 
         emit Transfer(address(0), to, amount);
     }
-// remixd -s . -u https://remix.ethereum.org/
+    // remixd -s . -u https://remix.ethereum.org/
     function transfer(address from, address to, uint amount) external {
         require(balanceOf[from] >= amount);
         balanceOf[from] -= amount;

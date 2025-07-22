@@ -13,17 +13,17 @@ contract EntryPoint {
 
     // userops 객체를 구조체로 정의
     struct UserOPeration {
-        address sender; 
+        address sender;
         uint nonce;
         bytes initCode;
         bytes callData;
         uint callGasLimit;
-        uint verificationGasLimit; 
+        uint verificationGasLimit;
         uint preverificationGas;
         uint maxFeePerGas;
         uint maxPrioityFeePerGas;
         bytes paymasterAndData;
-        bytes signature; 
+        bytes signature;
     }
 
     // 스마트 계정들의 논스값
@@ -44,7 +44,7 @@ contract EntryPoint {
             bytes32 _hash = _getUserOpHash(op);
             bytes32 ethSign = _toSignMessageHash(_hash);
             // 서명 검증 호출
-            (bool success,) = op.sender.call(
+            (bool success, ) = op.sender.call(
                 abi.encodeWithSignature(
                     "isValidSignature(bytes32,bytes)", // 함수의 형태를 정의
                     ethSign, // 매개변수 순서대로 서명 검증에 사용할 해시
@@ -58,7 +58,9 @@ contract EntryPoint {
             // msg에 포함되는 값 {gas : op.callGasLimit}
             // 이더를 전송하는 내용과 함수 전송하는 내용을 같이 작성
             // 괄호는 실행되어야할 로직 전달
-            (bool isActive, ) = op.sender.call{gas : op.callGasLimit}(op.callData);
+            (bool isActive, ) = op.sender.call{gas: op.callGasLimit}(
+                op.callData
+            );
 
             // 이벤트 로그로 작성
             emit UserOperationHandled(op.sender, isActive);
@@ -69,29 +71,35 @@ contract EntryPoint {
     }
 
     // 유저 작업을 해시하는 함수
-    function _getUserOpHash (UserOPeration calldata op) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
-            op.sender,
-            op.nonce,
-            keccak256(op.initCode),
-            keccak256(op.callData),
-            op.callGasLimit,
-            op.verificationGasLimit,
-            op.preverificationGas,
-            op.maxFeePerGas,
-            op.maxPrioityFeePerGas,
-            keccak256(op.paymasterAndData),
-            keccak256(op.signature)
-        ));
+    function _getUserOpHash(
+        UserOPeration calldata op
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    op.sender,
+                    op.nonce,
+                    keccak256(op.initCode),
+                    keccak256(op.callData),
+                    op.callGasLimit,
+                    op.verificationGasLimit,
+                    op.preverificationGas,
+                    op.maxFeePerGas,
+                    op.maxPrioityFeePerGas,
+                    keccak256(op.paymasterAndData),
+                    keccak256(op.signature)
+                )
+            );
     }
 
     // EIP 191 서명 검증 포멧 -> 이 형태로 포멧하는 이유는 확장프로그램 등 메타마스크 지갑에서 호환가능한 서명 검증 방식
-    function _toSignMessageHash (bytes32 _hash) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32", // 고정 프리픽스 EIP 191 표준 서명 방식
-                _hash
-            )
-        );
-    } 
+    function _toSignMessageHash(bytes32 _hash) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\x19Ethereum Signed Message:\n32", // 고정 프리픽스 EIP 191 표준 서명 방식
+                    _hash
+                )
+            );
+    }
 }

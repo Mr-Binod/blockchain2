@@ -21,7 +21,11 @@ contract SmartAccount {
     }
 
     // 핵심 함수
-    function execute(address to, uint value, bytes calldata data) external onlyEntryPoint {
+    function execute(
+        address to,
+        uint value,
+        bytes calldata data
+    ) external onlyEntryPoint {
         // address to 호출할 주소 => 컨트랙트 주소 혹은 EOA
         // data => 호출할 주소가 컨트랙트일 경우 로직의 실행 내용이 포함되어있다.
         // value 전달하는 이더의 량
@@ -31,18 +35,24 @@ contract SmartAccount {
         // 함수 호출
         // to에 메시지를 전달해서 to.call
         // 낮은 수준으로 작성한 함수의 내용
-        (bool success,) = to.call{value : value}(data);
+        (bool success, ) = to.call{value: value}(data);
         // 내부 트랜잭션을 발생 시키는 것.
         require(success);
     }
 
-    function isValidSignature(bytes32 _hash, bytes calldata sig) external view returns (bool) {
+    function isValidSignature(
+        bytes32 _hash,
+        bytes calldata sig
+    ) external view returns (bool) {
         address recovered = _recoverSigner(_hash, sig);
         return recovered == owner;
         // 서명 검증 방식 확장성
     }
 
-    function _recoverSigner(bytes32 _hash, bytes memory sig) internal pure returns (address) {
+    function _recoverSigner(
+        bytes32 _hash,
+        bytes memory sig
+    ) internal pure returns (address) {
         // 공개키로 복원
         (bytes32 r, bytes32 s, uint8 v) = _splitSign(sig);
         // ecrecover 공개키 복원 함수
@@ -51,10 +61,12 @@ contract SmartAccount {
 
     // r s v
     // bytes32 r, bytes32 s, uint v 변수명 정해놓고 작성을 하면 최종적으로 코드 종료 이후에 반환된다,
-    function _splitSign (bytes memory sig) internal pure returns(bytes32 r, bytes32 s, uint8 v) {
+    function _splitSign(
+        bytes memory sig
+    ) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
         // 정상적인 서명의 값인지 확인
         require(sig.length == 65);
-        assembly{
+        assembly {
             r := mload(add(sig, 32))
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))

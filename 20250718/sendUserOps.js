@@ -391,7 +391,7 @@ const sendEntryPoint = async () => {
 
     // userops 객체 만들어서 전달
     // 작업 내용 반복 금지
-    const nonce = 1n;
+    const nonce = entryPoint.nonces[smartAccountAddress];
 
     const userOp = {
         sender : smartAccountAddress,

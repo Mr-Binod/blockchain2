@@ -40,7 +40,11 @@ contract SmartAccountFactory {
             // 데이터 시작 위치
             // 배열의 32바이트 이후의 값을 가지고 내용으로 사용
             // salt 고유값으로 사용
-            smartAccount := create2(0, add(bytecode, 32), mload(bytecode), salt)
+            smartAccount := create2(0, 
+             add(bytecode, 32), 
+            mload(bytecode), 
+            salt
+            )
             if iszero(extcodesize(smartAccount)) {
                 // 스마트 계정 여부 0x  배포 실패하면 리젝
                 revert(0, 0)

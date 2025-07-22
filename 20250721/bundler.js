@@ -195,6 +195,7 @@ const toTuple = (userOp) => {
 setTiemInterval(async () => {
     // 10초마다 트랜잭션 풀의 내용을 확인해서 작업 처리
     const ops = mempool.splice(0);
+	console.log(ops,'ops')
     if(ops.length === 0) return;
     try {
         const transaction = await entryPoint.handleOps(ops.map(toTuple));

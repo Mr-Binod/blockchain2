@@ -1,6 +1,3 @@
 {
-  "DeployAllModule#BingNFT": "0x3642bb1fa8a8873E78C8A493be588039194f02d1",
-  "DeployAllModule#Bingtoken": "0xF7ED26b72E3344bde062D958E5a9547214130a07",
-  "DeployAllModule#MetaBingNFT": "0x0323c2B015D357832E5a4855c79A3C5DC7425c15",
-  "DeployAllModule#MetaTransaction": "0xCBAf07E86cA68428c64Ff7827C7AAC85BEa56fF6"
+  "DeployAllModule#PayMaster": "0x563cb9a834487126cbEbdF40b002485C3adda463"
 }
