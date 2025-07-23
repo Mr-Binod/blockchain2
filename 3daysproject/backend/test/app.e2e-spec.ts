@@ -39,7 +39,13 @@ describe('AppController (e2e)', () => {
           salt: 'hi',
           domain: 'google'
         })
-      // console.log(data)
+      console.log(data)
+    })
+    it('GET', () => {
+      const data = request(app.getHttpServer())
+      .get('/account')
+
+      console.log(data)
     })
   })
 })

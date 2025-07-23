@@ -18,7 +18,7 @@ export class AccountService {
     const privateKey = createPvtKey(data)
     const wallet = new ethers.Wallet(privateKey, this.provider)
     const owner = wallet.address;
-    console.log(owner)
+    console.log("owner")
     const tx = await this.FactoryContract.createAcc(owner);
     const result = await tx.wait();
 
