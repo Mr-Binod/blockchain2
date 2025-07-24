@@ -17,10 +17,9 @@ export class ModelService {
         publicKey : string
     ){
         try {
-            
-            console.log(user, account, balance, privateKey, publicKey,'eee')
+            // console.log(user, account, balance, privateKey, publicKey,'eee')
             const check = await this.userModel.create({user, account, balance, privateKey, publicKey})
-            console.log(check,'22')
+            // console.log(check,'22')
              return check
         } catch (error) {
             console.log(error, '123')

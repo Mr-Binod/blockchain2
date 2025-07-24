@@ -13,14 +13,14 @@ module.exports = buildModule("DeployAllModule", (m) => {
 //     const metaTransaction = m.contract("MetaTransaction", [bingtoken]);
 //     const metaBingNFT = m.contract("MetaBingNFT", [bingNFT]);
 
-    const payMaster = m.contract("PayMaster", ["0xa46f8B3CEC59D6fFc20f45B5A8aF0E7Bd396Bc8F","0x7D45612C65b4a4EdA42060c9aA1C21Eb552ED77A"])
+    const payMaster = m.contract("PayMaster", ["0xf4AeB6f0666B7e5DB603Edd05C0A2D0cE7ce7d09","0x7D45612C65b4a4EdA42060c9aA1C21Eb552ED77A"])
     // const entryPoint = m.contract("EntryPoint")
     // const smartFactory = m.contract("SmartFactory", [entryPoint])
     // const smartAcc = m.contract("SmartFactory", [entryPoint])
 
     return { payMaster };
-    return { entryPoint, smartFactory };
-    return { bingNFT, bingtoken, metaTransaction, metaBingNFT };
+    // return { entryPoint, smartFactory };
+    // return { bingNFT, bingtoken, metaTransaction, metaBingNFT };
   
 
 });

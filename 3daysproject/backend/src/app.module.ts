@@ -3,30 +3,48 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WalletModule } from './wallet/wallet.module';
 import { ModelModule } from './model/model.module';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { ContractsModule } from './coin/contracts.module';
-import { NftModule } from './nft/nft.module';
+// import { SequelizeModule } from '@nestjs/sequelize';
 import { AccountModule } from './account/account.module';
-import { UserOpsModule } from './user-ops/user-ops.module';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SmartAccInfo } from './account/entities/account.entity';
+import { BundlerModule } from './bundler/bundler.module';
+import { UseropsModule } from './userops/userops.module';
 
 
 @Module({
-  imports: [WalletModule, ModelModule,
-    SequelizeModule.forRoot({
-      dialect: 'mysql', // or 'postgres', etc.
+  // imports: [WalletModule, ModelModule,
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // makes ConfigService available app-wide
+    }),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
       host: 'localhost',
       port: 3306,
-      username: 'master',
-      password: 'admin123',
+      username: 'myid',
+      password: '1994!BDs',
       database: 'B3project',
-      autoLoadModels: true,
-      synchronize: true,
-      sync: { force: false },
+      entities: [SmartAccInfo], // ⬅️ Register multiple entities
+      synchronize: false,
+      // dropSchema: true 
     }),
-    ContractsModule,
-    NftModule,
+    // SequelizeModule.forRoot({
+    //   dialect: 'mysql', // or 'postgres', etc.
+    //   host: 'localhost',
+    //   port: 3306,
+    //   username: 'myid',
+    //   password: '1994!BDs',
+    //   database: 'B3project',
+    //   autoLoadModels: true,
+    //   synchronize: true,
+    //   sync: { force: false },
+    // }),
+    TypeOrmModule.forFeature([SmartAccInfo]),
     AccountModule,
-    UserOpsModule
+    TypeOrmModule,
+    BundlerModule,
+    UseropsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,9 +11,9 @@ app.use(express.json());
 
 const privateKey = "0x18f85a676d2022001dd03e25a769655907ff435b793548d082d68b62aef3d237";
 const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/c36ac18d957a4f46aa6b893c058c4bbd");
-const wallet = new ethers.Wallet(privateKey, provider);
+const paymasterWallet = new ethers.Wallet(privateKey, provider);
 
-// 사용자의 계정이 아닌 관리자 대납자 계정 서명자 wallet
+// 사용자의 계정이 아닌 관리자 대납자 계정 서명자 paymasterWallet
 // 엔트리포인트 CA
 const entryPointCA = "0xe660DC6A442F97Ac320671e29046Bd90b407410D";
 const entryPointABI = [
@@ -127,7 +127,7 @@ const entryPointABI = [
 	}
 ];
 
-const entryPoint = new ethers.Contract(entryPointCA, entryPointABI, wallet);
+const entryPoint = new ethers.Contract(entryPointCA, entryPointABI, paymasterWallet);
 
 // 트랜잭션을 관리하는 리스트
 // 역활과 책임 

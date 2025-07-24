@@ -1,8 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import Mainpage from "./components/pages/Mainpage";
-import Mypage from "./components/pages/Mypage";
-import { Loginpage } from "./components/pages/Loginpage";
 import { useSelector } from "react-redux";
+import Newpage from "./components/pages/ERC4337/Loginpage";
+import Mainpage from "./components/pages/ERC4337/Mainpage";
 
 
 function App() {
@@ -13,11 +12,11 @@ function App() {
 
         {!islogin ?
           <Routes>
-            <Route path="/" element={<Loginpage />} />
+            <Route path="/" element={<Newpage />} />
           </Routes> :
           <Routes>
             <Route path="/main" element={<Mainpage />} />
-            <Route path="/mypage" element={<Mypage />} />
+            {/* <Route path="/mypage" element={< />} /> */}
           </Routes>}
       </BrowserRouter>
     </div>
