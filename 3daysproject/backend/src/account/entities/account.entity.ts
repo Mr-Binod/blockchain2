@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-export class SmartAccInfo {
+export class SmartAccInfoEntity {
     @PrimaryGeneratedColumn()
     id : number;
 

@@ -31,8 +31,8 @@ export class BundlerService {
     this.mempool.push(userop)
     console.log('GG1', this.mempool)
     console.log('GG3', entryPointCA)
-
     this.startProcessingLoop(10000)
+    return({state : 200, message : 'successfully minted'})
   }
 
   getMempool() {
@@ -73,10 +73,8 @@ export class BundlerService {
       return;
     }
     const ops = this.mempool.splice(0); // clear mempool copy
-    console.log('PP')
     try {
       const tx = await this.PayMasterEntryPoint.handleOps(ops.map((op) => this.toTuple(op)));
-      console.log('PP1')
       this.logger.log(`Processed transactions, tx hash: ${tx.hash}`);
     } catch (error) {
       this.logger.error('Error processing transactions:', error);

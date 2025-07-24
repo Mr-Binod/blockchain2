@@ -24,24 +24,30 @@ contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
     mapping(address => uint[]) private userTokenIds;
     mapping(uint256 => string) private _uris;
 
+    event TokenURICreated(uint256 tokenId, address indexed sender, string uri);
+
     SellList[] public SellNftList;
     uint private tokenId;
     string private initialURI = "https://myproject.com/metadata/{id}.json";
 
+    event createdItemLists(address seller, uint token, uint price);
     event sellItemLists(address seller, uint token, uint price);
+    event buyItemLists(address seller, uint token, uint price);
     
     constructor() ERC1155(initialURI) Ownable(msg.sender) {
         // No need for external address parameter
     }
 
-    function settokenURI(string memory newuri, address sender) external returns (uint) {
+    // function settokenURI(string memory newuri, address sender) external returns (uint) {
+    function settokenURI(string memory newuri, address sender) external {
         uint createdTokenId = tokenId;
         _mint(sender, createdTokenId, 100, "");
         _uris[createdTokenId] = newuri;
         ownerNfts[sender][createdTokenId] = 100;
         _addTokenIdToUser(sender, createdTokenId);
         tokenId++;
-        return createdTokenId;
+        emit TokenURICreated(createdTokenId, sender, newuri);
+        // return createdTokenId;
     }
 
     function SellNFT(address sender, uint256 nftid, uint256 token, uint price) external {

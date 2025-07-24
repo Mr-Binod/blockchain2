@@ -7,9 +7,12 @@ import { ModelModule } from './model/model.module';
 import { AccountModule } from './account/account.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SmartAccInfo } from './account/entities/account.entity';
+import { SmartAccInfoEntity } from './account/entities/account.entity';
 import { BundlerModule } from './bundler/bundler.module';
-import { UseropsModule } from './userops/userops.module';
+import { ContractsModule } from './contracts/contracts.module';
+import { NftUriEntity } from './contracts/entities/nft-uri.entity';
+import { SellNftEntity } from './contracts/entities/sell-nft.entity';
+import { UserNftEntity } from './contracts/entities/user-nft.entity';
 
 
 @Module({
@@ -25,7 +28,7 @@ import { UseropsModule } from './userops/userops.module';
       username: 'myid',
       password: '1994!BDs',
       database: 'B3project',
-      entities: [SmartAccInfo], // ⬅️ Register multiple entities
+      entities: [SmartAccInfoEntity, UserNftEntity, NftUriEntity, SellNftEntity], // ⬅️ Register multiple entities
       synchronize: false,
       // dropSchema: true 
     }),
@@ -40,11 +43,11 @@ import { UseropsModule } from './userops/userops.module';
     //   synchronize: true,
     //   sync: { force: false },
     // }),
-    TypeOrmModule.forFeature([SmartAccInfo]),
+    TypeOrmModule.forFeature([SmartAccInfoEntity, UserNftEntity, NftUriEntity, SellNftEntity]),
     AccountModule,
     TypeOrmModule,
     BundlerModule,
-    UseropsModule,
+    ContractsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

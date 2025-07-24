@@ -6,18 +6,23 @@ import { createPvtKey } from './utils/PvtKeyGen';
 import FactoryAbi from "../abi/SmartFactory.json";
 import PayMaster from "../abi/PayMaster.json"
 import { ConfigService } from '@nestjs/config';
-import { SmartAccInfo } from './entities/account.entity';
+import { SmartAccInfoEntity } from './entities/account.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AccountService {
+
+  PaymasterPvtKey : string;
+
   constructor(
     private configService: ConfigService,
 
-    @InjectRepository(SmartAccInfo)
-    private readonly smartAccInfo: Repository<SmartAccInfo>
-  ) { }
+    @InjectRepository(SmartAccInfoEntity)
+    private readonly smartAccInfoEntity: Repository<SmartAccInfoEntity>
+  ) { 
+    this.PaymasterPvtKey= `${this.configService.get<string>('PRIVATE_KEY')}`
+  }
 
   private readonly logger = new Logger('AccountService');
   private readonly provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/c36ac18d957a4f46aa6b893c058c4bbd")
@@ -50,14 +55,14 @@ export class AccountService {
 
       const address = wallet.address
       const privateKey = wallet.privateKey;
-      const data = this.smartAccInfo.create({
+      const data = this.smartAccInfoEntity.create({
         user,
         UserAddress: address,
         smartAcc,
         privateKey,
         checkWhitelist
       })
-      await this.smartAccInfo.save(data);
+      await this.smartAccInfoEntity.save(data);
       // console.log(`Wallet Address: ${wallet.address}`);
       // console.log(`Private Key :  ${wallet.privateKey}`)
       // console.log(`Transaction hash : ${result.hash}`)
@@ -72,7 +77,7 @@ export class AccountService {
 
   async getFindAll() {
     try {
-      const data = await this.smartAccInfo.find()
+      const data = await this.smartAccInfoEntity.find()
       if(data) return data
       return data
     } catch (error) {
@@ -82,7 +87,7 @@ export class AccountService {
 
   async getFindOne(user : string) {
     try {
-      const data = await this.smartAccInfo.findOne({where : { user }})
+      const data = await this.smartAccInfoEntity.findOne({where : { user }})
       if(data) return ({state : 201, message : data});
       return ({state : 401, message : data})
     } catch (error) {

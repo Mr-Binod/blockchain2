@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AbiCoder, ethers, Wallet } from "ethers";
 
-const sendEntryPoint = async (smartAccCA, nonce, callData, signer) => {
+const sendEntryPoint = async (smartAccCA, EntryPointContract, callData, signer) => {
 
     const amount = ethers.parseEther("1000", 18);
     const value = ethers.parseEther("0");
@@ -9,6 +9,8 @@ const sendEntryPoint = async (smartAccCA, nonce, callData, signer) => {
     // const callData = smartAccCA.interface.encodeFunctionData("execute",
     //     [smartAccCA, value, mintCallData]
     // )
+    const nonce = await EntryPointContract.nonces(smartAccCA)
+    
     const userOp = {
         sender: smartAccCA,
         nonce ,
