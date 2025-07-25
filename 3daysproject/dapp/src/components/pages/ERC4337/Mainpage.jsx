@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDispatch, useSelector } from 'react-redux'
 import useNewEthers from '../../../hooks/useNewEthers'
 import { getUserInfo } from '../../../api/ERC4337/NewApi'
@@ -44,21 +44,29 @@ const Mainpage = () => {
             const formdata = new FormData();
             const File = e.target.file.files[0];
             formdata.append("file", File)
-            console.log('test uploadipfs data', formdata, File)
 
             const IpfsUri = await uploadIPFS(formdata)
-
-            const mintCallData = await NftContract.interface.encodeFunctionData('settokenURI', [IpfsUri, smartAcc])
-
+            console.log(smartAcc,'ss',  signer.address, NftContract)
+            const mintCallData = await NftContract.interface.encodeFunctionData('settokenURI', [IpfsUri, signer.address])
+            
             const callData = SmartAccountContract.interface.encodeFunctionData('execute',
-                [NftContract.address('check this'), value, mintCallData]
+                [process.env.REACT_APP_NFT_CA, value, mintCallData]
             )
+            const nft = await NftContract.balanceOf( signer.address, 0)
+            console.log('gg', nft)
+            // const data = await NftContract.settokenURI(IpfsUri, smartAcc)
+            // console.log(data)
+            // await data.wait();
+            // console.log(IpfsUri, 'Ipfs', mintCallData, callData, smartAcc)
+            // const data = await sendEntryPoint(smartAcc, EntryPointContract, callData, signer)
+            // console.log('dd')
+            // const data  = await NftContract.settokenURI('QmenpusScXwASuo4tgboEX93byDjPymrsAdh6Cm4CKcpCb', "0xD1Dd864c1901E4e967B4676c9c02C6288147Ff24")
+            // await data.wait()
+            // console.log(data, 'dd')
 
-            const data = await sendEntryPoint(smartAcc, EntryPointContract, callData, signer)
-            
-            const eventData = await NftContract.on('TokenURICreated')
+            // const eventData = await NftContract.on('TokenURICreated')
 
-            
+            // console.log(eventData,'ee')
 
             // const NftToken = await NftContract.balanceOf(smartAcc, NftId)
 
@@ -75,8 +83,8 @@ const Mainpage = () => {
     const CallHookFn = () => {
         const result = useNewEthers(userInfo.privateKey, userInfo.smartAcc)
         dispatch({ type: 'Contracts', payload: result })
-        console.log(result, 'result', userInfo)
-        console.log(Contracts)
+        // console.log(result, 'result', userInfo)
+        // console.log(Contracts)
     }
 
     const GetCoin = async () => {
@@ -122,12 +130,13 @@ const Mainpage = () => {
                 user Balance : {userBalance ? userBalance : 0} BTK <br />
                 White List : {(userInfo?.checkWhitelist === true) ? 'true' : 'false'}
             </div>
+            <h3>Get Coin</h3>
+            <button onClick={GetCoin} >Get Coin</button>
             <h3>uploadNFT</h3>
             <form onSubmit={(e) => createNftMutn.mutate(e)}>
                 <input type="file" name='file' />
                 <button>submit</button>
             </form>
-            <button onClick={GetCoin} >Get Coin</button>
         </div>
     )
 }

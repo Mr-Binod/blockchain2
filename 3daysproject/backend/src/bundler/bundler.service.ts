@@ -22,7 +22,7 @@ export class BundlerService {
 
 
   async addMempool(userop : CreateBundlerDto) {
-    this.privateKey = `${this.configService.get<string>('PRIVATE_KEY')}`
+    this.privateKey = `fbc1960a886986637345636605e54f7f7e54d1b36f92ee1ec44c77820c444a17`
     this.paymasterWallet = new ethers.Wallet(this.privateKey, this.provider)
 
     const entryPointCA = `${this.configService.get<string>('ENTRY_POINT')}`

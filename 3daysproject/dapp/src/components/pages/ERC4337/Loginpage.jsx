@@ -18,8 +18,8 @@ const Newpage = () => {
             // console.log(signupid.value)
             const data = {
                 id: signupid.value,
-                email: 'bing31@gmail.com',
-                salt: 'hi',
+                email: 'bing33@gmail.com',
+                salt: 'hii',
                 domain: 'google'
             }
             const response = await CreateAcc(data)
@@ -33,17 +33,20 @@ const Newpage = () => {
             queryClient.invalidateQueries(["user"])
         }
     })
+
+    const {isPending} = signUpHandler;
+
     const loginHandler = async (e) => {
         e.preventDefault();
         const { userid } = e.target;
         console.log('gg', userid.value)
         const data = await getUserInfo(userid.value)
         console.log(data, 'f')
-        if (data.state !== 201) alert('아이디를 일치하지 않습니다')
+        if (data.state !== 201) return alert('아이디를 일치하지 않습니다')
         dispatch({ type: 'setUserId', payload: userid.value })  // ✅ Set in Redux
         dispatch({ type: 'login' })
-        navigate('/main')
         userid.value = "";
+        navigate('/main')
     }
 
     return (
@@ -60,6 +63,7 @@ const Newpage = () => {
                     <input type="text" name='signupid' />
                     <button>signup</button>
                 </form></div>
+                {isPending && <div>pending</div> }
         </div>
     )
 }

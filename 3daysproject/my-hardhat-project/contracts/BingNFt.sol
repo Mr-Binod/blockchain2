@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
+contract BingNFT is ERC1155, IERC1155Receiver {
     // Removed unused variable
     struct Sellstake {
         address seller;
@@ -34,20 +34,20 @@ contract BingNFT is ERC1155, Ownable, IERC1155Receiver {
     event sellItemLists(address seller, uint token, uint price);
     event buyItemLists(address seller, uint token, uint price);
     
-    constructor() ERC1155(initialURI) Ownable(msg.sender) {
+    constructor() ERC1155(initialURI) {
         // No need for external address parameter
     }
 
-    // function settokenURI(string memory newuri, address sender) external returns (uint) {
-    function settokenURI(string memory newuri, address sender) external {
+    function settokenURI(string memory newuri, address sender) external returns (uint) {
+    // function settokenURI(string memory newuri, address sender) external {
         uint createdTokenId = tokenId;
         _mint(sender, createdTokenId, 100, "");
         _uris[createdTokenId] = newuri;
         ownerNfts[sender][createdTokenId] = 100;
-        _addTokenIdToUser(sender, createdTokenId);
+        // _addTokenIdToUser(sender, createdTokenId);
         tokenId++;
         emit TokenURICreated(createdTokenId, sender, newuri);
-        // return createdTokenId;
+        return createdTokenId;
     }
 
     function SellNFT(address sender, uint256 nftid, uint256 token, uint price) external {

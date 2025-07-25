@@ -10,7 +10,7 @@ const sendEntryPoint = async (smartAccCA, EntryPointContract, callData, signer) 
     //     [smartAccCA, value, mintCallData]
     // )
     const nonce = await EntryPointContract.nonces(smartAccCA)
-    
+    console.log(nonce, 'ssss', smartAccCA)
     const userOp = {
         sender: smartAccCA,
         nonce ,
@@ -57,7 +57,6 @@ const sendEntryPoint = async (smartAccCA, EntryPointContract, callData, signer) 
     const hash = ethers.keccak256(encoded);
     const signature = await signer.signMessage(ethers.getBytes(hash));
     userOp.signature = signature;
-    console.log('GG')
 
     const userOpTuple = [];
     for (const key in userOp) {
@@ -75,7 +74,7 @@ const sendEntryPoint = async (smartAccCA, EntryPointContract, callData, signer) 
         "http://localhost:3001/userop",
         userOpToJson(userOp)
     )
-    // console.log(res)
+    console.log(res)
     return res
 }
 

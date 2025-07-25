@@ -131,4 +131,4 @@ const BuyNft = async (sender, receiver, nftid, price, contractMetaNft,contractNF
 
 }
 
-export { BuyNft, uploadIPFS, GetBTKcoin, userBalance, userNft, SellNft, getAllListedNftids } 
+export { BuyNft, uploadIPFS,  userNft, SellNft, getAllListedNftids } 

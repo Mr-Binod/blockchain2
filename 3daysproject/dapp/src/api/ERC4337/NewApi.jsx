@@ -13,7 +13,7 @@ const getUserInfo = async (userid) => {
  
 const CreateAcc = async (data) => {
     const result = await getUserInfo(data.id)
-    console.log(result)
+    console.log(result, result)
     if(result.state === 201) return result
     const response = await axios.post('http://localhost:3001/account', data) 
     return response.data
