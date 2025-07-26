@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract SmartAccount is ERC1155Holder  {
+contract SmartAccount is ERC1155Holder {
     address owner;
     address entryPoint;
 

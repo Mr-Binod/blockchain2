@@ -23,13 +23,14 @@ export class AccountService {
 
   private readonly logger = new Logger('AccountService');
   private readonly provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/c36ac18d957a4f46aa6b893c058c4bbd")
-  private readonly FactoryAcc = "0x212B48Ef5Eec050AFb342F7aF8c49ccBCfCd6684";
-  private readonly PayMasterAcc = "0x88637C77578ba6e8Ad373C3176ABf3b2064c7C9F";
+  private readonly FactoryAcc = "0x99E599E5F5D4f1f1750b619ECaFDa2426f386fa5";
+  private readonly PayMasterAcc = "0x25d3d45CE80E021333a74CB364F8BfA6A86BBe8a";
 
   async createAcc(data: CreateAccountDto) {
-    const PaymasterPvtkey = 'fbc1960a886986637345636605e54f7f7e54d1b36f92ee1ec44c77820c444a17'
+    const PaymasterPvtkey = '1bb48ef643ede40a87a2b32be5d9c11a0192490d94105dc6f81c0ae102dda212'
     // const PaymasterPvtkey = `${this.configService.get<string>('PRIVATE_KEY')}`
-    const user = data.id
+    const user = data.id;
+    const userpw = data.signuppw;
     const privateKey = createPvtKey(data)
     const wallet = new ethers.Wallet(privateKey, this.provider)
     const PaymasterWallet = new ethers.Wallet(PaymasterPvtkey, this.provider)
@@ -55,6 +56,7 @@ export class AccountService {
       const privateKey = wallet.privateKey;
       const data = this.smartAccInfoEntity.create({
         user,
+        userpw,
         UserAddress: address,
         smartAcc,
         privateKey,
@@ -88,7 +90,7 @@ export class AccountService {
       const data = await this.smartAccInfoEntity.findOne({ where: { user } })
       console.log(data)
       if (data) return ({ state: 201, message: data });
-      return ({ state: 401, message: data })
+      return ({ state: 402, message: data })
     } catch (error) {
       return ({ state: 402, message: error })
     }

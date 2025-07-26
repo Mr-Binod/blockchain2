@@ -3,11 +3,11 @@ import { BundlerService } from './bundler.service';
 import { CreateBundlerDto } from './dto/create-bundler.dto';
 import { UpdateBundlerDto } from './dto/update-bundler.dto';
 
-@Controller('userop')
+@Controller()
 export class BundlerController {
   constructor(private readonly bundlerService: BundlerService) {}
 
-  @Post()
+  @Post('userop')
   async addMempool(@Body() data: CreateBundlerDto) {
     try {
       console.log('connected' ,data)
@@ -18,7 +18,18 @@ export class BundlerController {
     }
   }
 
-  @Get()
+  // @Post('createnft')
+  // async CreateNft(@Body() Uri : string, address : string) {
+  //   try {
+      
+  //     return this.CreateNft(Uri, address)
+  //   } catch (error) {
+  //     return {state : 403, message : error}
+  //   }
+  // }
+  
+
+  @Get('userop')
   getMempool() {
     return this.bundlerService.getMempool();
   }

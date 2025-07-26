@@ -113,28 +113,6 @@
 				"type": "error"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					}
-				],
-				"name": "OwnableInvalidOwner",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "OwnableUnauthorizedAccount",
-				"type": "error"
-			},
-			{
 				"anonymous": false,
 				"inputs": [
 					{
@@ -163,19 +141,25 @@
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "previousOwner",
-						"type": "address"
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
 					},
 					{
 						"indexed": true,
 						"internalType": "address",
-						"name": "newOwner",
+						"name": "sender",
 						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
 					}
 				],
-				"name": "OwnershipTransferred",
+				"name": "TokenURICreated",
 				"type": "event"
 			},
 			{
@@ -269,6 +253,56 @@
 					}
 				],
 				"name": "URI",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "token",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"name": "buyItemLists",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "token",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"name": "createdItemLists",
 				"type": "event"
 			},
 			{
@@ -714,104 +748,6 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "operator",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "from",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "ids",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "values",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "bytes",
-						"name": "data",
-						"type": "bytes"
-					}
-				],
-				"name": "onERC1155BatchReceived",
-				"outputs": [
-					{
-						"internalType": "bytes4",
-						"name": "",
-						"type": "bytes4"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "operator",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "from",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "value",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bytes",
-						"name": "data",
-						"type": "bytes"
-					}
-				],
-				"name": "onERC1155Received",
-				"outputs": [
-					{
-						"internalType": "bytes4",
-						"name": "",
-						"type": "bytes4"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "owner",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "renounceOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
 						"name": "from",
 						"type": "address"
 					},
@@ -938,19 +874,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "transferOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "uint256",
 						"name": "tokenid",
 						"type": "uint256"
@@ -1049,16 +972,6 @@
 							"owner": "Address of the current owner of a token."
 						}
 					}
-				],
-				"OwnableInvalidOwner(address)": [
-					{
-						"details": "The owner is not a valid owner account. (eg. `address(0)`)"
-					}
-				],
-				"OwnableUnauthorizedAccount(address)": [
-					{
-						"details": "The caller account is not authorized to perform an operation."
-					}
 				]
 			},
 			"events": {
@@ -1086,38 +999,6 @@
 				"isApprovedForAll(address,address)": {
 					"details": "Returns true if `operator` is approved to transfer ``account``'s tokens. See {setApprovalForAll}."
 				},
-				"onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": {
-					"details": "Handles the receipt of a multiple ERC-1155 token types. This function is called at the end of a `safeBatchTransferFrom` after the balances have been updated. NOTE: To accept the transfer(s), this must return `bytes4(keccak256(\"onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)\"))` (i.e. 0xbc197c81, or its own function selector).",
-					"params": {
-						"data": "Additional data with no specified format",
-						"from": "The address which previously owned the token",
-						"ids": "An array containing ids of each token being transferred (order and length must match values array)",
-						"operator": "The address which initiated the batch transfer (i.e. msg.sender)",
-						"values": "An array containing amounts of each token being transferred (order and length must match ids array)"
-					},
-					"returns": {
-						"_0": "`bytes4(keccak256(\"onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)\"))` if transfer is allowed"
-					}
-				},
-				"onERC1155Received(address,address,uint256,uint256,bytes)": {
-					"details": "Handles the receipt of a single ERC-1155 token type. This function is called at the end of a `safeTransferFrom` after the balance has been updated. NOTE: To accept the transfer, this must return `bytes4(keccak256(\"onERC1155Received(address,address,uint256,uint256,bytes)\"))` (i.e. 0xf23a6e61, or its own function selector).",
-					"params": {
-						"data": "Additional data with no specified format",
-						"from": "The address which previously owned the token",
-						"id": "The ID of the token being transferred",
-						"operator": "The address which initiated the transfer (i.e. msg.sender)",
-						"value": "The amount of tokens being transferred"
-					},
-					"returns": {
-						"_0": "`bytes4(keccak256(\"onERC1155Received(address,address,uint256,uint256,bytes)\"))` if transfer is allowed"
-					}
-				},
-				"owner()": {
-					"details": "Returns the address of the current owner."
-				},
-				"renounceOwnership()": {
-					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
-				},
 				"safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)": {
 					"details": "xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}. WARNING: This function can potentially allow a reentrancy attack when transferring tokens to an untrusted contract, when invoking {IERC1155Receiver-onERC1155BatchReceived} on the receiver. Ensure to follow the checks-effects-interactions pattern and consider employing reentrancy guards when interacting with untrusted contracts. Emits either a {TransferSingle} or a {TransferBatch} event, depending on the length of the array arguments. Requirements: - `ids` and `values` must have the same length. - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the acceptance magic value."
 				},
@@ -1127,8 +1008,8 @@
 				"setApprovalForAll(address,bool)": {
 					"details": "Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`, Emits an {ApprovalForAll} event. Requirements: - `operator` cannot be the zero address."
 				},
-				"transferOwnership(address)": {
-					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+				"supportsInterface(bytes4)": {
+					"details": "Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[ERC section] to learn more about how these ids are created. This function call must use less than 30 000 gas."
 				}
 			},
 			"version": 1
@@ -1308,11 +1189,11 @@
 			]
 		},
 		"my-hardhat-project/contracts/BingNFt.sol": {
-			"keccak256": "0x6b9b4a59e2a41c5d967143df663e0bf2e8be3d22d11d73f32dfd5de7fdedf737",
+			"keccak256": "0x8bc4eb37ef8af7382326ac63bbdcf62080d152081771ef2f62695ba04d9d6f74",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://d73cdf756bcdc9e842321cbcd07759eda4e99f3c6b942abe51f3b48c6195128f",
-				"dweb:/ipfs/QmWrUvgMfrVnPonpaKva9E9VeRsYpGchVhc8QLsrfQxXFz"
+				"bzz-raw://dac4a85888f86960c1cf49c0aa880ef1051a62beee6c537539a7f9cf10bab6d1",
+				"dweb:/ipfs/Qmb84Ckd5HdfJaPMpfifWoCG88NddRnyKAH6yQXECWucSx"
 			]
 		}
 	},

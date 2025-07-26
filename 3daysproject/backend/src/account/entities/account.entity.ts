@@ -9,6 +9,9 @@ export class SmartAccInfoEntity {
     user : string;
     
     @Column()
+    userpw : string;
+    
+    @Column()
     UserAddress : string;
 
     @Column()

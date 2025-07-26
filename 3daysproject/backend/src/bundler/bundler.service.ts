@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 import { IUserOperation } from 'src/account/account.interface';
 import entryPointABI from "../abi/EntryPoint.json"
+import NftABI from '../abi/BingNFT.json'
 
 @Injectable()
 export class BundlerService {
@@ -15,24 +16,22 @@ export class BundlerService {
   private mempool: CreateBundlerDto[] = [];
   private paymasterWallet: ethers.Wallet;
   private PayMasterEntryPoint: ethers.Contract;
-  private privateKey : string;
+  private privateKey: string;
   constructor(
     private configService: ConfigService
   ) { }
 
 
-  async addMempool(userop : CreateBundlerDto) {
-    this.privateKey = `fbc1960a886986637345636605e54f7f7e54d1b36f92ee1ec44c77820c444a17`
+  async addMempool(userop: CreateBundlerDto) {
+    this.privateKey = `1bb48ef643ede40a87a2b32be5d9c11a0192490d94105dc6f81c0ae102dda212`
     this.paymasterWallet = new ethers.Wallet(this.privateKey, this.provider)
 
     const entryPointCA = `${this.configService.get<string>('ENTRY_POINT')}`
     this.PayMasterEntryPoint = new ethers.Contract(entryPointCA, entryPointABI.abi, this.paymasterWallet)
-    
+
     this.mempool.push(userop)
-    console.log('GG1', this.mempool)
-    console.log('GG3', entryPointCA)
     this.startProcessingLoop(10000)
-    return({state : 200, message : 'successfully minted'})
+    return ({ state: 200, message: 'successfully minted' })
   }
 
   getMempool() {
@@ -80,4 +79,7 @@ export class BundlerService {
       this.logger.error('Error processing transactions:', error);
     }
   }
+
+
+
 }

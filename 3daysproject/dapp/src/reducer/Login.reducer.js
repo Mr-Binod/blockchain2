@@ -3,7 +3,8 @@ import { useState } from "react"
 const initialState = {
     State: false,
     userId: null,
-    user: null
+    userinfo: null,
+    loading : false
 };
 
 export const LoginReducer = (state = initialState, action) => {
@@ -13,13 +14,16 @@ export const LoginReducer = (state = initialState, action) => {
             return{...state, State: true};
         }
         case "logout" : {
-            return{...state, State: false, userId: null, user: null};
+            return{...state, State: false, userId: null, userinfo: null};
         }
         case "setUserId": {
             return{...state, userId: action.payload};
         }
         case "setUser": {
-            return{...state, user: action.payload};
+            return{...state, userinfo: action.payload};
+        }
+        case "Loading": {
+            return{...state, loading: action.payload};
         }
         default: {
             return state;

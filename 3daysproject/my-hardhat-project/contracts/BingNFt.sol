@@ -44,7 +44,6 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         _mint(sender, createdTokenId, 100, "");
         _uris[createdTokenId] = newuri;
         ownerNfts[sender][createdTokenId] = 100;
-        // _addTokenIdToUser(sender, createdTokenId);
         tokenId++;
         emit TokenURICreated(createdTokenId, sender, newuri);
         return createdTokenId;
@@ -71,7 +70,6 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         _safeTransferFrom(address(this), receiver, nftid, item.token, "");
         // payable(item.seller).transfer(msg.value);
         ownerNfts[receiver][nftid] += item.token;
-        _addTokenIdToUser(receiver, nftid);
         delete items[sender][nftid];
     }
 
@@ -81,19 +79,9 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         require(item.seller != address(0), "NFT not for sale");
         _safeTransferFrom(address(this), sender, nftid, item.token, "");
         ownerNfts[sender][nftid] += item.token;
-        _addTokenIdToUser(sender, nftid);
         delete items[sender][nftid];
     }
 
-    function _addTokenIdToUser(address user, uint tokenid) internal {
-        uint[] storage ids = userTokenIds[user];
-        for (uint i = 0; i < ids.length; i++) {
-            if (ids[i] == tokenid) {
-                return;
-            }
-        }
-        ids.push(tokenid); // Fixed: was tokenId, should be tokenid
-    }
 
     function uri(uint256 tokenid) public view virtual override returns (string memory) {
         string memory customUri = _uris[tokenid];
@@ -108,10 +96,6 @@ contract BingNFT is ERC1155, IERC1155Receiver {
     return SellNftList;
 }
 
-    function getall(address sender, uint item) external view returns(Sellstake memory) {
-        return items[sender][item];
-    }
-
     function getMintedTokens(address user) external view returns(uint[] memory tokenIds, uint[] memory amounts) {
         uint[] memory ids = userTokenIds[user];
         tokenIds = new uint[](ids.length);
@@ -123,52 +107,10 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         return (tokenIds, amounts);
     }
 
-    function getCurrentBalance(address user, uint tknId) external view returns(uint) {
-        return ownerNfts[user][tknId];
-    }
-
-    function getAllTokenBalances(address user) external view returns(uint[] memory tokenIds, uint[] memory balances) {
-        uint[] memory ids = userTokenIds[user];
-        tokenIds = new uint[](ids.length);
-        balances = new uint[](ids.length);
-        for (uint i = 0; i < ids.length; i++) {
-            tokenIds[i] = ids[i];
-            balances[i] = ownerNfts[user][ids[i]];
-        }
-        return (tokenIds, balances);
-    }
-
-    function getOwnerTokenCount(address user) external view returns(uint) {
-        return userTokenIds[user].length;
-    }
-
-    function getOwnerTokenAtIndex(address user, uint index) external view returns(uint tokenid, uint amount) {
-        require(index < userTokenIds[user].length, "Index out of bounds");
-        tokenid = userTokenIds[user][index];
-        amount = ownerNfts[user][tokenid]; // Fixed: was tokenId, should be tokenid
-    }
-
     function userTokens(address user) external view returns(uint[] memory) {
         return userTokenIds[user];
     }
 
-    function getBalance(address owner, uint nftid) external view returns(uint ) {
-        return balanceOf(owner, nftid);
-    }
-
-    // function getTotalTokensForNFTId(uint nftid) external view returns(uint totalTokens) {
-    //     // Check if this nftid is currently listed
-    //     if (items[sender][nftid].seller != address(0)) {
-    //         totalTokens += items[sender][nftid].token;
-    //     }
-    // }
-
- 
-    // function getTotalValueForNFTId(uint nftid) external view returns(uint totalValue) {
-    //     if (items[nftid].seller != address(0)) {
-    //         totalValue = items[nftid].price * items[nftid].token;
-    //     }
-    // }
 
     function onERC1155Received(
         address operator,
@@ -181,7 +123,6 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         return this.onERC1155Received.selector;
     }
 
-   
     function onERC1155BatchReceived(
         address operator,
         address from,
@@ -193,10 +134,10 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         return this.onERC1155BatchReceived.selector;
     }
 
-  
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
+    receive() external payable {}
 }
 
 // How to "Get" It:

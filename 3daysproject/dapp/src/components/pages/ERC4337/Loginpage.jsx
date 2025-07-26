@@ -14,11 +14,12 @@ const Newpage = () => {
     const signUpHandler = useMutation({
         mutationFn: async (e) => {
             e.preventDefault();
-            const { signupid } = e.target
+            const { signupid, signuppw } = e.target
             // console.log(signupid.value)
             const data = {
                 id: signupid.value,
-                email: 'bing33@gmail.com',
+                signuppw,
+                email: 'bing34@gmail.com',
                 salt: 'hii',
                 domain: 'google'
             }
@@ -38,9 +39,9 @@ const Newpage = () => {
 
     const loginHandler = async (e) => {
         e.preventDefault();
-        const { userid } = e.target;
+        const { userid, userpw } = e.target;
         console.log('gg', userid.value)
-        const data = await getUserInfo(userid.value)
+        const data = await getUserInfo(userid.value, userpw.value)
         console.log(data, 'f')
         if (data.state !== 201) return alert('아이디를 일치하지 않습니다')
         dispatch({ type: 'setUserId', payload: userid.value })  // ✅ Set in Redux
@@ -56,11 +57,13 @@ const Newpage = () => {
 
             <div>Loginpage</div>
             <div> <form onSubmit={(e) => loginHandler(e)}>
-                <input type="text" name='userid' />
+                <input type="text" name='userid' placeholder='아이디'/> <br />
+                <input type="text" name='userpw' placeholder='비밀번호' /> <br />
                 <button>Login</button>
             </form> <br />
                 <form onSubmit={(e) => signUpHandler.mutate(e)}>
-                    <input type="text" name='signupid' />
+                    <input type="text" name='signupid' placeholder='아이디'/> <br />
+                    <input type="text" name='signuppw' placeholder='비밀번호 4개 이상'/> <br />
                     <button>signup</button>
                 </form></div>
                 {isPending && <div>pending</div> }

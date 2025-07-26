@@ -25,12 +25,12 @@ import { UserNftEntity } from './contracts/entities/user-nft.entity';
       type: 'mysql',
       host: 'localhost',
       port: 3306,
-      username: 'myid',
-      password: '1994!BDs',
+      username: 'master',
+      password: 'admin123',
       database: 'B3project',
       entities: [SmartAccInfoEntity, UserNftEntity, NftUriEntity, SellNftEntity], // ⬅️ Register multiple entities
       synchronize: false,
-      // dropSchema: false 
+      // dropSchema: true 
     }),
     // SequelizeModule.forRoot({
     //   dialect: 'mysql', // or 'postgres', etc.
