@@ -22,7 +22,7 @@ export class ContractsService {
   private readonly provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/c36ac18d957a4f46aa6b893c058c4bbd")
   private readonly PayMasterprivateKey = `1bb48ef643ede40a87a2b32be5d9c11a0192490d94105dc6f81c0ae102dda212`
   private readonly paymasterWallet = new ethers.Wallet(this.PayMasterprivateKey, this.provider)
-  private readonly PayMasterNftContract = new ethers.Contract("0x5e903511eda543fDe22845635764Dcd4802A67A6", NftABI.abi, this.paymasterWallet)
+  private readonly PayMasterNftContract = new ethers.Contract("0xFc2D4a33457e8F7423B2CcdD3f34ee36Eab6d365", NftABI.abi, this.paymasterWallet)
   // private paymasterWallet: ethers.Wallet;
 
   constructor(

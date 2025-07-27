@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDispatch, useSelector } from 'react-redux'
 import useNewEthers from '../../../hooks/useNewEthers'
-import { CreateNft, getUserInfo } from '../../../api/ERC4337/NewApi'
+import { CreateNft, getUserInfo, getUserInfoCreate } from '../../../api/ERC4337/NewApi'
 import { sendEntryPoint } from '../../../api/ERC4337/SendUserOps'
 import { uploadIPFS } from '../../../api/ERC4337/Ipfs'
 import axios from 'axios'
@@ -23,7 +23,7 @@ const Mainpage = () => {
     const [cancelData, setCancelData] = useState({ userid: '', sender: '', nftid: null, nftUridata: '', nftidToken: null })
 
     const Contracts = useSelector((state) => state.contractReducer)
-    const { userId, loading } = useSelector((state) => state.LoginReducer)
+    const { userId, loading, islogin } = useSelector((state) => state.LoginReducer)
 
     const amount = ethers.parseEther("1000", 18);
     const value = ethers.parseEther("0");
@@ -35,7 +35,7 @@ const Mainpage = () => {
     const { data, isLoading } = useQuery({
         queryKey: ["user"],
         queryFn: async () => {
-            const data = await getUserInfo(userId)
+            const data = await getUserInfoCreate(userId)
             const { data: sellnft } = await axios.get('http://localhost:3001/sellnft')
             console.log(sellnft, 'ss')
             const parsesSellnft = sellnft.message.map((el) => {
@@ -69,12 +69,17 @@ const Mainpage = () => {
             const { TokenContract, SmartAccountContract, EntryPointContract, NftContract, signer } = Contracts;
             const { smartAcc } = userInfo;
             const formdata = new FormData();
+            const {nftname, nftdesc} = e.target;
             const File = e.target.file.files[0];
 
+            const nftName = nftname.value
+            const nftDesc = nftdesc.value
+
             formdata.append("file", File)
+            console.log(formdata)
 
-            const IpfsUri = await uploadIPFS(formdata)
-
+            const IpfsUri = await uploadIPFS({formdata, nftName, nftDesc})
+            dispatch({type : 'Loading', payload : true})
             const data = await CreateNft(IpfsUri, smartAcc)
 
             const filter = NftContract.filters.TokenURICreated(); // create a filter
@@ -107,6 +112,7 @@ const Mainpage = () => {
                     console.log(_data)
                     const data = await axios.post(`http://localhost:3001/createusernft`, _data)
                     console.log(data)
+                    dispatch({type : 'Loading', payload : false})
                 } catch (error) {
                     alert('NFT 추가 오류' + error)
                 }
@@ -147,37 +153,37 @@ const Mainpage = () => {
         )
         const response = await sendEntryPoint(smartAcc, EntryPointContract, callData, signer)
 
-        // const balance = await TokenContract.balanceOf(smartAcc)
-        // const newBalance = ethers.formatEther(balance)
-        // setUserBalance(newBalance)
-        // console.log('response mainpage', newBalance, response)
+        const balance = await TokenContract.balanceOf(smartAcc)
+        const newBalance = ethers.formatEther(balance)
+        setUserBalance(newBalance)
+        console.log('response mainpage', newBalance, response)
 
-        // await new Promise((resolve, reject) => {
-        //     const listener = async (owner, value) => {
-        //         if (owner.toLowerCase() === smartAcc.toLowerCase()) {
-        //             const balance = await TokenContract.balanceOf(smartAcc);
-        //             const newBalance = ethers.formatEther(balance);
-        //             setUserBalance(newBalance);
+        await new Promise((resolve, reject) => {
+            const listener = async (owner, value) => {
+                if (owner.toLowerCase() === smartAcc.toLowerCase()) {
+                    const balance = await TokenContract.balanceOf(smartAcc);
+                    const newBalance = ethers.formatEther(balance);
+                    setUserBalance(newBalance);
 
-        //             console.log('Minted:', owner, value.toString());
-        //             console.log('response mainpage', newBalance, response);
-        //             TokenContract.off('minted', listener); // Clean up the listener
-        //             resolve();
-        //         }
-        //     };
-        //     setTimeout(() => {
-        //         TokenContract.off('minted', listener);
-        //         reject(new Error("Timeout: 'minted' event not received"));
-        //     }, 30000); // 30 seconds
-        //     TokenContract.on('minted', listener);
-        // });
+                    console.log('Minted:', owner, value.toString());
+                    console.log('response mainpage', newBalance, response);
+                    TokenContract.off('minted', listener); // Clean up the listener
+                    resolve();
+                }
+            };
+            setTimeout(() => {
+                TokenContract.off('minted', listener);
+                reject(new Error("Timeout: 'minted' event not received"));
+            }, 30000); // 30 seconds
+            TokenContract.on('minted', listener);
+        });
         dispatch({ type: 'Loading', payload: false })
         setCount(prev => prev + 1)
-        setShowBtn(false)
-        const timeout = setTimeout(() => {
-           setShowBtn(true)      
-        }, 24 * 60 * 60 * 1000);
-        return () => clearTimeout(timeout)
+        // setShowBtn(false)
+        // const timeout = setTimeout(() => {
+        //    setShowBtn(true)      
+        // }, 24 * 60 * 60 * 1000);
+        // return () => clearTimeout(timeout)
     }
 
     useEffect(() => {
@@ -203,9 +209,7 @@ const Mainpage = () => {
         const { data } = await axios.delete('http://localhost:3001/sellnft', { data: _data })
         const { data: PatchData } = await axios.patch('http://localhost:3001/sellnft', updataData)
         const { data: ContractRes } = await axios.delete('http://localhost:3001/contractsellnft', { data: _data })
-        // console.log(ContractRes)
         if (ContractRes.state = 200) alert('네트워크에 기로 되었습니다')
-        // console.log(data, PatchData, 'patch')
         dispatch({ type: 'Loading', payload: false })
         setCount(prev => prev + 1)
     }
@@ -214,6 +218,8 @@ const Mainpage = () => {
         dispatch({ type: 'Loading', payload: true })
         const { TokenContract, SmartAccountContract, EntryPointContract, signer } = Contracts;
         const { smartAcc } = userInfo;
+        console.log(userBalance)
+        if(userBalance < Number(price)) return alert('잔액이 부족합니다')
         const receiver = userInfo.smartAcc;
         const stringifyData = JSON.stringify(nftUridata)
         const data = { userid: userId, sender, nftid, nftUridata: stringifyData, nftidToken, price, receiver }
@@ -237,34 +243,41 @@ const Mainpage = () => {
         )
         const response = await sendEntryPoint(smartAcc, EntryPointContract, callData, signer)
         console.log('GGG')
-        //  await new Promise((resolve, reject) => {
-        //     const listener = async (owner, value) => {
-        //         if (owner.toLowerCase() === smartAcc.toLowerCase()) {
-        //             const balance = await TokenContract.balanceOf(smartAcc);
-        //             const newBalance = ethers.formatEther(balance);
-        //             setUserBalance(newBalance);
+         await new Promise((resolve, reject) => {
+            const listener = async (owner, value) => {
+                if (owner.toLowerCase() === smartAcc.toLowerCase()) {
+                    const balance = await TokenContract.balanceOf(smartAcc);
+                    const newBalance = ethers.formatEther(balance);
+                    setUserBalance(newBalance);
 
-        //             console.log('Minted:', owner, value.toString());
-        //             console.log('response mainpage', newBalance, response);
-        //             TokenContract.off('minted', listener); // Clean up the listener
-        //             resolve();
-        //         }
-        //     };
-        //     setTimeout(() => {
-        //         TokenContract.off('minted', listener);
-        //         reject(new Error("Timeout: 'minted' event not received"));
-        //     }, 30000); // 30 seconds
-        //     TokenContract.on('minted', listener);
-        // });
+                    console.log('Minted:', owner, value.toString());
+                    console.log('response mainpage', newBalance, response);
+                    TokenContract.off('Transfer', listener); // Clean up the listener
+                    resolve();
+                }
+            };
+            setTimeout(() => {
+                TokenContract.off('Transfer', listener);
+                reject(new Error("Timeout: 'Transfer' event not received"));
+            }, 30000); // 30 seconds
+            TokenContract.on('minted', listener);
+        });
         alert('NFT 구매 완료 되었습니다')
         dispatch({ type: 'Loading', payload: false })
         setCount(prev => prev + 1)
     }
 
-
+    const LogoutHandler = () => {
+        // navigate('/')
+        dispatch({ type: 'logout' })  // This will clear userId and user too
+        console.log('zz')
+    }
 
     return (
         <div>
+            <h3>Main Page</h3>
+            <Link to='/mypage' >My Page</Link> <br /> <br />
+            <Link to="/"><button onClick={LogoutHandler}>Logout</button></Link> <br /><br />
             <div>
                 아이디 : {userId} <br />
                 public Key : {userInfo?.UserAddress} <br />
@@ -272,14 +285,15 @@ const Mainpage = () => {
                 user Balance : {userBalance ? userBalance : 0} BTK <br />
                 White List : {(userInfo?.checkWhitelist === true) ? 'true' : 'false'}
             </div>
-            <h3>goto mypage</h3>
-            <Link to='/mypage' >My Page</Link>
+             
             <h3>Get Coin</h3>
-            {showBtn ? <button onClick={GetCoin} >Get Coin</button> : '24 시간후 다시 가능합니다'}
+            {loading ? <img src={loadingGif} alt="" width='50px' /> : <button onClick={GetCoin} >Get Coin</button>}
             <h3>uploadNFT</h3>
             <form onSubmit={(e) => createNftMutn.mutate(e)}>
+                <input type="text" name='nftname' placeholder='NFT 이름' /> <br />
+                <textarea name="nftdesc" placeholder='NFT 내용' id=""></textarea> <br />
                 <input type="file" name='file' />
-                <button>submit</button>
+                {loading ? <img src={loadingGif} alt="" width='50px' /> :<button>submit</button>}
             </form>
             <h3>NFT Marketplace</h3>
             {sellnfts?.map((el, i) => {
@@ -287,7 +301,7 @@ const Mainpage = () => {
                     <div key={i}>
                         <img src={el.nftUridata.image} alt="" width='200px' />
                         <div><span>name : {el.nftUridata.name}</span> <span>token id : {el.nftid}</span> </div>
-                        <div><span>name : Sell Amt : {el.nftidTokenAmt}</span> <span>Price : {el.price}</span> </div>
+                        <div><span>Sell Amt : {el.nftidTokenAmt}</span> <span>Price : {el.price}</span> </div>
                         <div>seller : {el.userid}</div>
                         <div className='desc' >desc : {el.nftUridata.description}</div>
                         {loading ? (
@@ -306,7 +320,6 @@ const Mainpage = () => {
                             }
                             } >Cancel Sell</button> : <button onClick={() => {
                                 BuyNft({
-
                                     sender: el.smartAccAddress,
                                     nftid: el.nftid,
                                     nftUridata: el.nftUridata,

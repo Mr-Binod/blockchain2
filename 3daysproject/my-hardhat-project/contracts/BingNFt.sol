@@ -14,11 +14,11 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         uint token;
         uint price;
     }
-     struct SellList {
+    struct SellList {
         address owner;
         uint nftid;
-     }
-    
+    }
+
     mapping(address => mapping(uint => Sellstake)) public items;
     mapping(address => mapping(uint => uint)) private ownerNfts;
     mapping(address => uint[]) private userTokenIds;
@@ -30,39 +30,57 @@ contract BingNFT is ERC1155, IERC1155Receiver {
     uint private tokenId;
     string private initialURI = "https://myproject.com/metadata/{id}.json";
 
-    event createdItemLists(address seller, uint token, uint price);
-    event sellItemLists(address seller, uint token, uint price);
-    event buyItemLists(address seller, uint token, uint price);
-    
+    event createdItemLists(address seller, uint token, uint amount);
+    event sellItemLists(address seller, uint token, uint tokenAmt, uint price);
+    event buyItemLists(address seller, uint token, uint tokenAmt, uint price);
+
     constructor() ERC1155(initialURI) {
         // No need for external address parameter
     }
 
-    function settokenURI(string memory newuri, address sender) external returns (uint) {
-    // function settokenURI(string memory newuri, address sender) external {
+    function settokenURI(
+        string memory newuri,
+        address sender
+    ) external returns (uint) {
+        // function settokenURI(string memory newuri, address sender) external {
         uint createdTokenId = tokenId;
-        _mint(sender, createdTokenId, 100, "");
+        _mint(sender, createdTokenId, 10, "");
         _uris[createdTokenId] = newuri;
-        ownerNfts[sender][createdTokenId] = 100;
+        ownerNfts[sender][createdTokenId] = 10;
         tokenId++;
         emit TokenURICreated(createdTokenId, sender, newuri);
+        emit createdItemLists(sender, createdTokenId, 10);
+
         return createdTokenId;
     }
 
-    function SellNFT(address sender, uint256 nftid, uint256 token, uint price) external {
+    function SellNFT(
+        address sender,
+        uint256 nftid,
+        uint256 token,
+        uint price
+    ) external {
         require(balanceOf(sender, nftid) >= token, "Insufficient tokens");
         require(price > 0, "Price must be greater than 0");
-        require(items[sender][nftid].seller == address(0), "NFT already for sale");
+        require(
+            items[sender][nftid].seller == address(0),
+            "NFT already for sale"
+        );
         require(token > 0, "Must sell at least 1 token");
         require(ownerNfts[sender][nftid] >= token, "Not enough tokens");
         _safeTransferFrom(sender, address(this), nftid, token, "");
         ownerNfts[sender][nftid] -= token;
         items[sender][nftid] = Sellstake(sender, token, price);
         SellNftList.push(SellList(sender, nftid));
-        emit sellItemLists(sender, token, price);
+        emit sellItemLists(sender, nftid, token, price);
     }
 
-    function BuyNFT( address sender, address receiver, uint256 nftid,  uint price) external {
+    function BuyNFT(
+        address sender,
+        address receiver,
+        uint256 nftid,
+        uint price
+    ) external {
         Sellstake memory item = items[sender][nftid];
         require(item.price == price, "Incorrect price");
         require(receiver != item.seller, "Cannot buy your own NFT");
@@ -71,6 +89,7 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         // payable(item.seller).transfer(msg.value);
         ownerNfts[receiver][nftid] += item.token;
         delete items[sender][nftid];
+        emit buyItemLists(sender, nftid, item.token, price);
     }
 
     function cancelSale(uint256 nftid, address sender) external {
@@ -82,35 +101,31 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         delete items[sender][nftid];
     }
 
-
-    function uri(uint256 tokenid) public view virtual override returns (string memory) {
+    function uri(
+        uint256 tokenid
+    ) public view virtual override returns (string memory) {
         string memory customUri = _uris[tokenid];
         if (bytes(customUri).length > 0) {
             return customUri;
         }
         string memory tokenIdStr = Strings.toString(tokenid);
-        return string(abi.encodePacked("https://myproject.com/metadata/", tokenIdStr, ".json"));
+        return
+            string(
+                abi.encodePacked(
+                    "https://myproject.com/metadata/",
+                    tokenIdStr,
+                    ".json"
+                )
+            );
     }
 
     function getAllListedNFTIds() external view returns (SellList[] memory) {
-    return SellNftList;
-}
-
-    function getMintedTokens(address user) external view returns(uint[] memory tokenIds, uint[] memory amounts) {
-        uint[] memory ids = userTokenIds[user];
-        tokenIds = new uint[](ids.length);
-        amounts = new uint[](ids.length);
-        for (uint i = 0; i < ids.length; i++) {
-            tokenIds[i] = ids[i];
-            amounts[i] = ownerNfts[user][ids[i]];
-        }
-        return (tokenIds, amounts);
+        return SellNftList;
     }
 
-    function userTokens(address user) external view returns(uint[] memory) {
+    function userTokens(address user) external view returns (uint[] memory) {
         return userTokenIds[user];
     }
-
 
     function onERC1155Received(
         address operator,
@@ -134,8 +149,12 @@ contract BingNFT is ERC1155, IERC1155Receiver {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
-        return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
     receive() external payable {}
 }

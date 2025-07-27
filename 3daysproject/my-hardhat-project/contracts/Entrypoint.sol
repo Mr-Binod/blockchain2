@@ -26,14 +26,14 @@ contract EntryPoint {
             UserOperation calldata op = ops[i];
             require(op.nonce == nonces[op.sender], "nonce error");
 
-            // if(op.paymasterAndData.length >= 20) {
-            //     address paymaster = address(bytes20(op.paymasterAndData));
-            //     uint maxCost = op.callGasLimit * op.maxFeePerGas;
-            //     (bool _success, ) = paymaster.call(
-            //         abi.encodeWithSignature("validatePaymasterUserOp(address,uint256)", op.sender, maxCost)
-            //     );
-            //     require(_success, "error validatePaymasterUserOp");
-            // }
+            if(op.paymasterAndData.length >= 20) {
+                address paymaster = address(bytes20(op.paymasterAndData));
+                uint maxCost = op.callGasLimit * op.maxFeePerGas;
+                (bool _success, ) = paymaster.call(
+                    abi.encodeWithSignature("validatePaymasterUserOp(address,uint256)", op.sender, maxCost)
+                );
+                require(_success, "error validatePaymasterUserOp");
+            }
 
             bytes32 _hash = _getUserOpHash(op);
             bytes32 ethSignature = _toSignMsgHash(_hash);

@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { userBalance } from '../../../api/ERC1155/Contract'
 import styled from 'styled-components'
 import loadingGif from '../../../images'
+import { Link } from 'react-router-dom'
 
 const Wrap = styled.div`
   position: relative;
@@ -97,7 +98,12 @@ const Mypage = () => {
         e.preventDefault();
         setIsactive(false)
         const { NfttknAmt, uintprice } = e.target;
-        console.log(NfttknAmt, uintprice)
+        console.log(NfttknAmt, uintprice, userNfts, selldata)
+        const UserNftidToken = userNfts.find(el => el.nftid == selldata.nftid)
+
+        if(UserNftidToken.nftidToken < Number(NfttknAmt.value)) return alert('판매 토큰 량 확인해주세요')
+
+        // return
         const _data = {
             userid: selldata.userid,
             smartAccAddress: userinfo.smartAcc,
@@ -118,7 +124,8 @@ const Mypage = () => {
     }
 
     return (
-        <Wrap>Mypage
+        <Wrap>
+            <h3>Mypage</h3>
             {isactive && <Divform>
                 <form action="" className='Tokenform' onSubmit={(e) => sellNft(e)}>
                     <div>
@@ -138,6 +145,8 @@ const Mypage = () => {
                     </div>
                 </form>
             </Divform>}
+            
+            <Link to='/main'>Main page</Link>
             <h3>User 정보</h3>
             <div>
                 아이디 : {userId} <br />

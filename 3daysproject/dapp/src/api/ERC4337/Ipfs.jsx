@@ -7,7 +7,7 @@ const pinata_secret_api_key = "3a0293c0918269143c81ab9c4ef791d4f83b0d7f925ddb8aa
 
 
 
-const uploadIPFS = async (formdata) => {
+const uploadIPFS = async ({formdata, nftName, nftDesc}) => {
     try {
         const { data } = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formdata, {
             headers: {
@@ -17,7 +17,7 @@ const uploadIPFS = async (formdata) => {
             }
         })
         const ipfsImage = `ipfs://${data.IpfsHash}`;
-        const JsonURI = await uploadJsonMetadataIPFS("bb", 'ape', ipfsImage)
+        const JsonURI = await uploadJsonMetadataIPFS(nftName, nftDesc, ipfsImage)
 
         return JsonURI
    

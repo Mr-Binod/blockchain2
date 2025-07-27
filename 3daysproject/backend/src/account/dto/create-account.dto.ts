@@ -5,7 +5,7 @@ export class CreateAccountDto {
     id: string;
 
     @IsString()
-    signuppw: string;
+    userpw: string;
 
     @IsString()
     email: string;

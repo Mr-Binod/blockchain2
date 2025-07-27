@@ -23,14 +23,14 @@ export class AccountService {
 
   private readonly logger = new Logger('AccountService');
   private readonly provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/c36ac18d957a4f46aa6b893c058c4bbd")
-  private readonly FactoryAcc = "0x99E599E5F5D4f1f1750b619ECaFDa2426f386fa5";
-  private readonly PayMasterAcc = "0x25d3d45CE80E021333a74CB364F8BfA6A86BBe8a";
+  private readonly FactoryAcc = "0x7e0C0D363F28a9A38B2C381F9506e18eA6A6eAd1";
+  private readonly PayMasterAcc = "0x240639B6E95B6428220dB6A61F56e0c21E1A638F";
 
   async createAcc(data: CreateAccountDto) {
     const PaymasterPvtkey = '1bb48ef643ede40a87a2b32be5d9c11a0192490d94105dc6f81c0ae102dda212'
     // const PaymasterPvtkey = `${this.configService.get<string>('PRIVATE_KEY')}`
     const user = data.id;
-    const userpw = data.signuppw;
+    const userpw = data.userpw;
     const privateKey = createPvtKey(data)
     const wallet = new ethers.Wallet(privateKey, this.provider)
     const PaymasterWallet = new ethers.Wallet(PaymasterPvtkey, this.provider)
