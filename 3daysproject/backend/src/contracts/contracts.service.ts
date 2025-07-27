@@ -202,9 +202,16 @@ export class ContractsService {
         'nftidToken',
         nftidToken
       )
+      console.log(result, 'cancel',data)
+      if (result.affected === 0) {
+        const result = this.userNftEntity.create({ userid, nftid, nftidToken, nftUridata })
+        await this.userNftEntity.save(result)
+        console.log(result, 'zz')
+        return { state: 203, message: result }
+      }
       return { state: 202, message: result }
-    } catch (error) {
-      throw new Error('error patching sellnft')
+      } catch (error) {
+        throw new Error (407 + error)
     }
   }
   async UpdateNft(data: BuynftDto) {
@@ -232,5 +239,14 @@ export class ContractsService {
     }
   }
 
+  async CheckZero() {
+    try {
+      const result = await this.userNftEntity.delete({nftidToken : 0})
+      console.log('delete rows checkzero', result)
+      return result
+    } catch (error) {
+      throw new Error (407 + error)
+    }
+  }
 
 }

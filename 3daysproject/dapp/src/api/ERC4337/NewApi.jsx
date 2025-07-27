@@ -41,5 +41,9 @@ const CreateNft = async (IpfsUri, smartAcc) => {
     return data
 }
 
+const CheckZero = async () => {
+    await axios.delete('http://localhost:3001/checkzero')
+}
 
-export {getUsersInfos, CreateAcc, getUserInfo, CreateNft, getUserInfoCreate}
+
+export {getUsersInfos, CreateAcc, getUserInfo, CreateNft, getUserInfoCreate, CheckZero}

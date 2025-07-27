@@ -6,6 +6,9 @@ import { userBalance } from '../../../api/ERC1155/Contract'
 import styled from 'styled-components'
 import loadingGif from '../../../images'
 import { Link } from 'react-router-dom'
+import { CheckZero, getUserInfoCreate } from '../../../api/ERC4337/NewApi'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+
 
 const Wrap = styled.div`
   position: relative;
@@ -71,14 +74,36 @@ const Mypage = () => {
     const [balance, setBalance] = useState(0)
     const [userNfts, setUserNfts] = useState(null)
     const [isactive, setIsactive] = useState(false)
-    const [count, setCount] = useState(0)
     const [selldata, setSelldata] = useState({ userid: '', nftid: null, nftUridata: '' })
 
     const { userId, userinfo, loading } = useSelector((state) => state.LoginReducer)
     const Contracts = useSelector((state) => state.contractReducer)
-    
+    const sellLists = useSelector((state) => state.NftsReducer)
+
     const dispatch = useDispatch();
-    
+    const queryClient = useQueryClient();
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["mypage"],
+        queryFn: async () => {
+            const data = await getUserInfoCreate(userId)
+            const { data: sellnft } = await axios.get('http://localhost:3001/sellnft')
+            console.log(sellnft, 'ss')
+            const parsedSellnft = sellnft.message.map((el) => {
+                const parsed = JSON.parse(el.nftUridata)
+                el.nftUridata = parsed
+                return el
+            })
+            console.log(parsedSellnft, data.message)
+            dispatch({ type: 'nftDatas', payload: parsedSellnft })
+            return data
+        },
+        refetchOnMount: true,
+        refetchOnWindowFocus: false,
+        enabled: true,
+        retry: 3
+    })
+
     useEffect(() => {
         const { TokenContract } = Contracts;
         (async () => {
@@ -92,7 +117,7 @@ const Mypage = () => {
             })
             setUserNfts(parsedData)
         })()
-    }, [Contracts])
+    }, [Contracts, sellLists])
 
     const sellNft = async (e) => {
         e.preventDefault();
@@ -100,9 +125,8 @@ const Mypage = () => {
         const { NfttknAmt, uintprice } = e.target;
         console.log(NfttknAmt, uintprice, userNfts, selldata)
         const UserNftidToken = userNfts.find(el => el.nftid == selldata.nftid)
-
-        if(UserNftidToken.nftidToken < Number(NfttknAmt.value)) return alert('판매 토큰 량 확인해주세요')
-
+        if (uintprice.value <= 0) return alert('판매 가격을 확인해주세요')
+        if (UserNftidToken.nftidToken < Number(NfttknAmt.value) || 0 >= Number(NfttknAmt.value)) return alert('판매 토큰 량 확인해주세요')
         // return
         const _data = {
             userid: selldata.userid,
@@ -119,13 +143,43 @@ const Mypage = () => {
         // if (data) alert('NFT 판매 등록 완료되었습니다')
         const { data: contractData } = await axios.post('http://localhost:3001/contractsellnft', _data)
         if (contractData.state === 201) alert('NFT 네트워크에 기록 되었습니다다')
+        CheckZero()
+        await queryClient.invalidateQueries({ queryKey: ['mypage'] });
+        console.log(await queryClient.invalidateQueries({ queryKey: ['mypage'] }))
         dispatch({ type: 'Loading', payload: false })
-        setCount(prev => prev + 1)
+
     }
+    // console.log(queryClient.invalidateQueries())
+
+    const LogoutHandler = () => {
+        // navigate('/')
+        dispatch({ type: 'logout' })  // This will clear userId and user too
+        console.log('zz')
+    }
+
+
+    const MypageCancelHandler = async ({ userid, sender, nftid, nftUridata, nftidToken }) => {
+        const _data = { smartAccAddress: sender, nftid }
+        const stringifyData = JSON.stringify(nftUridata)
+        const updataData = { userid, nftid, nftUridata : stringifyData, nftidToken }
+        console.log(_data)
+        const confirmed = window.confirm('판매 취소 하시겠습니까?')
+        if (!confirmed) return;
+        dispatch({ type: 'Loading', payload: true })
+        const { data } = await axios.delete('http://localhost:3001/sellnft', { data: _data })
+        const { data: PatchData } = await axios.patch('http://localhost:3001/sellnft', updataData)
+        const { data: ContractRes } = await axios.delete('http://localhost:3001/contractsellnft', { data: _data })
+        if (ContractRes.state = 200) alert('네트워크에 기로 되었습니다')
+        dispatch({ type: 'Loading', payload: false })
+        await queryClient.invalidateQueries({ queryKey: ['mypage'] });
+    }
+    console.log(sellLists, userId)
 
     return (
         <Wrap>
             <h3>Mypage</h3>
+            <Link to='/main'>Main page</Link> <br /> <br />
+            <Link to="/"><button onClick={LogoutHandler}>Logout</button></Link> <br /><br />
             {isactive && <Divform>
                 <form action="" className='Tokenform' onSubmit={(e) => sellNft(e)}>
                     <div>
@@ -135,7 +189,7 @@ const Mypage = () => {
                     </div>
                     <div>
                         {/* <label htmlFor="">토큰  "한 개당"  판매 가격 </label> <br /> */}
-                        <input type="number" name='uintprice' placeholder='한개당 판매 가격' /> <br />
+                        <input type="number" name='uintprice' placeholder='판매 가격' /> <br />
                     </div>
                     <div className='Divbtn'>
                         <button type='button' onClick={() => {
@@ -145,8 +199,8 @@ const Mypage = () => {
                     </div>
                 </form>
             </Divform>}
-            
-            <Link to='/main'>Main page</Link>
+
+
             <h3>User 정보</h3>
             <div>
                 아이디 : {userId} <br />
@@ -160,8 +214,8 @@ const Mypage = () => {
                 {userNfts?.map((el, i) => {
                     return (<div key={i}><img src={el.nftUridata.image} width='200px' /> <br />
                         <div>name : {el.nftUridata.name} <span>nft id : {el.nftid}</span> </div>
-                        <div>desc : {el.nftUridata.description}</div>
                         <div> balance : {el.nftidToken}</div>
+                        <div>desc : {el.nftUridata.description}</div>
                         {loading ? <img src={loadingGif} width="50px" /> : <button onClick={() => {
                             setIsactive(true)
                             const stringifyNftUridata = JSON.stringify(el.nftUridata)
@@ -170,6 +224,37 @@ const Mypage = () => {
 
 
                     </div>)
+                })}
+                <h3>My NFT SellList</h3>
+                {sellLists.map((el, i) => {
+                    if (el.userid === userId) {
+                        return (
+                            <div key={i}>
+                                <img src={el.nftUridata.image} alt="" width='200px' />
+                                <div>name : {el.nftUridata.name} <span>nft id : {el.nftid}</span> </div>
+                                <div> <span>sell Amt : {el.nftidTokenAmt} </span> <span>price : {el.price}</span> </div>
+                                <div style={{
+                                    width: '200px',
+                                    overflow: 'hidden',
+                                    whiteSpace: 'nowrap',       // prevent text wrap, if desired
+                                    textOverflow: 'ellipsis',   // show "..." for overflowed text
+                                }}>desc : {el.nftUridata.description}</div>
+                                 {loading ? <img src={loadingGif} width="50px" /> : <button  onClick={() => {
+                                // setCancelData({userid : el.userid, sender : el.smartAccAddress, nftid : el.nftid})
+                                MypageCancelHandler({
+                                    userid: el.userid,
+                                    sender: el.smartAccAddress,
+                                    nftid: el.nftid,
+                                    nftUridata: el.nftUridata,
+                                    nftidToken: el.nftidTokenAmt
+                                })
+                                return
+                            }}>Cancel Sell</button>}
+
+                            </div>
+                        );
+                    }
+                    return null;
                 })}
             </div>
         </Wrap>

@@ -94,6 +94,11 @@ export class ContractsController {
     return this.contractsService.CancelContractNft(data)
   }
 
+  @Delete('checkzero')
+  CheckZero() {
+    return this.contractsService.CheckZero()
+  }
+
 
 
 }

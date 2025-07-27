@@ -8,7 +8,7 @@ import { uploadIPFS } from '../../../api/ERC4337/Ipfs'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import loadingGif from '../../../images'
-import { ethers} from 'ethers';
+import { ethers } from 'ethers';
 
 /* global BigInt */
 
@@ -38,15 +38,16 @@ const Mainpage = () => {
             const data = await getUserInfoCreate(userId)
             const { data: sellnft } = await axios.get('http://localhost:3001/sellnft')
             console.log(sellnft, 'ss')
-            const parsesSellnft = sellnft.message.map((el) => {
+            const parsedSellnft = sellnft.message.map((el) => {
                 const parsed = JSON.parse(el.nftUridata)
                 el.nftUridata = parsed
                 return el
             })
-            console.log(parsesSellnft)
+            console.log(parsedSellnft, data.message)
             setUserInfo(data.message)
             dispatch({ type: 'setUser', payload: data.message })
-            setSellnfts(parsesSellnft)
+            dispatch({ type: 'nftDatas', payload: parsedSellnft })
+            setSellnfts(parsedSellnft)
             return data
         },
         refetchOnMount: true,
@@ -69,7 +70,7 @@ const Mainpage = () => {
             const { TokenContract, SmartAccountContract, EntryPointContract, NftContract, signer } = Contracts;
             const { smartAcc } = userInfo;
             const formdata = new FormData();
-            const {nftname, nftdesc} = e.target;
+            const { nftname, nftdesc } = e.target;
             const File = e.target.file.files[0];
 
             const nftName = nftname.value
@@ -78,8 +79,8 @@ const Mainpage = () => {
             formdata.append("file", File)
             console.log(formdata)
 
-            const IpfsUri = await uploadIPFS({formdata, nftName, nftDesc})
-            dispatch({type : 'Loading', payload : true})
+            const IpfsUri = await uploadIPFS({ formdata, nftName, nftDesc })
+            dispatch({ type: 'Loading', payload: true })
             const data = await CreateNft(IpfsUri, smartAcc)
 
             const filter = NftContract.filters.TokenURICreated(); // create a filter
@@ -112,7 +113,7 @@ const Mainpage = () => {
                     console.log(_data)
                     const data = await axios.post(`http://localhost:3001/createusernft`, _data)
                     console.log(data)
-                    dispatch({type : 'Loading', payload : false})
+                    dispatch({ type: 'Loading', payload: false })
                 } catch (error) {
                     alert('NFT 추가 오류' + error)
                 }
@@ -134,7 +135,7 @@ const Mainpage = () => {
         },
         onSuccess: () => {
             // refetch()
-            queryClient.invalidateQueries(['users'])
+            queryClient.invalidateQueries({ queryKey: ['user'] }); 
         }
     })
 
@@ -174,16 +175,12 @@ const Mainpage = () => {
             setTimeout(() => {
                 TokenContract.off('minted', listener);
                 reject(new Error("Timeout: 'minted' event not received"));
-            }, 30000); // 30 seconds
+            }, 100000); // 30 seconds
             TokenContract.on('minted', listener);
         });
         dispatch({ type: 'Loading', payload: false })
-        setCount(prev => prev + 1)
-        // setShowBtn(false)
-        // const timeout = setTimeout(() => {
-        //    setShowBtn(true)      
-        // }, 24 * 60 * 60 * 1000);
-        // return () => clearTimeout(timeout)
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
+
     }
 
     useEffect(() => {
@@ -201,25 +198,27 @@ const Mainpage = () => {
 
     const CancelSell = async ({ userid, sender, nftid, nftUridata, nftidToken }) => {
         const _data = { smartAccAddress: sender, nftid }
-        const updataData = { userid, nftid, nftUridata, nftidToken }
+        const stringifyData = JSON.stringify(nftUridata)
+        const updataData = { userid, nftid, nftUridata : stringifyData, nftidToken }
         console.log(_data)
         const confirmed = window.confirm('판매 취소 하시겠습니까?')
-        if (!confirmed) return
+        if (!confirmed) return;
         dispatch({ type: 'Loading', payload: true })
         const { data } = await axios.delete('http://localhost:3001/sellnft', { data: _data })
         const { data: PatchData } = await axios.patch('http://localhost:3001/sellnft', updataData)
         const { data: ContractRes } = await axios.delete('http://localhost:3001/contractsellnft', { data: _data })
         if (ContractRes.state = 200) alert('네트워크에 기로 되었습니다')
         dispatch({ type: 'Loading', payload: false })
-        setCount(prev => prev + 1)
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
     }
 
     const BuyNft = async ({ sender, nftid, nftUridata, nftidToken, price }) => {
-        dispatch({ type: 'Loading', payload: true })
+        const confirmed = window.confirm('구매 하시겠습니까?')
+        if (!confirmed) return;
+        if (userBalance < Number(price)) return alert('잔액이 부족합니다')
         const { TokenContract, SmartAccountContract, EntryPointContract, signer } = Contracts;
         const { smartAcc } = userInfo;
-        console.log(userBalance)
-        if(userBalance < Number(price)) return alert('잔액이 부족합니다')
+        dispatch({ type: 'Loading', payload: true })
         const receiver = userInfo.smartAcc;
         const stringifyData = JSON.stringify(nftUridata)
         const data = { userid: userId, sender, nftid, nftUridata: stringifyData, nftidToken, price, receiver }
@@ -234,7 +233,7 @@ const Mainpage = () => {
         const amount = ethers.parseEther(`${price}`, 18)
         console.log({ sender, nftid, nftUridata, nftidToken, price, amount })
 
-        const mintCallData = TokenContract.interface.encodeFunctionData('transfer(address,uint256)', [sender, amount ])
+        const mintCallData = TokenContract.interface.encodeFunctionData('transfer(address,uint256)', [sender, amount])
         const events = await EntryPointContract.on('UserOpCompleted')
 
         console.log('nonce', events)
@@ -243,7 +242,7 @@ const Mainpage = () => {
         )
         const response = await sendEntryPoint(smartAcc, EntryPointContract, callData, signer)
         console.log('GGG')
-         await new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             const listener = async (owner, value) => {
                 if (owner.toLowerCase() === smartAcc.toLowerCase()) {
                     const balance = await TokenContract.balanceOf(smartAcc);
@@ -259,12 +258,12 @@ const Mainpage = () => {
             setTimeout(() => {
                 TokenContract.off('Transfer', listener);
                 reject(new Error("Timeout: 'Transfer' event not received"));
-            }, 30000); // 30 seconds
-            TokenContract.on('minted', listener);
+            }, 100000); // 30 seconds
+            TokenContract.on('Transfer', listener);
         });
         alert('NFT 구매 완료 되었습니다')
         dispatch({ type: 'Loading', payload: false })
-        setCount(prev => prev + 1)
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
     }
 
     const LogoutHandler = () => {
@@ -285,7 +284,7 @@ const Mainpage = () => {
                 user Balance : {userBalance ? userBalance : 0} BTK <br />
                 White List : {(userInfo?.checkWhitelist === true) ? 'true' : 'false'}
             </div>
-             
+
             <h3>Get Coin</h3>
             {loading ? <img src={loadingGif} alt="" width='50px' /> : <button onClick={GetCoin} >Get Coin</button>}
             <h3>uploadNFT</h3>
@@ -293,7 +292,7 @@ const Mainpage = () => {
                 <input type="text" name='nftname' placeholder='NFT 이름' /> <br />
                 <textarea name="nftdesc" placeholder='NFT 내용' id=""></textarea> <br />
                 <input type="file" name='file' />
-                {loading ? <img src={loadingGif} alt="" width='50px' /> :<button>submit</button>}
+                {loading ? <img src={loadingGif} alt="" width='50px' /> : <button>submit</button>}
             </form>
             <h3>NFT Marketplace</h3>
             {sellnfts?.map((el, i) => {
