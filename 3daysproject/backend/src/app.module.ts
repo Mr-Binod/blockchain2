@@ -23,7 +23,7 @@ import { UserNftEntity } from './contracts/entities/user-nft.entity';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
+      host: '%',
       port: 3306,
       username: 'master',
       password: 'admin123',
